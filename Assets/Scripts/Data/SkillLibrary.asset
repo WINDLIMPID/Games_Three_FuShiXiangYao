@@ -1,0 +1,197 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef8a3561bdc4ac24eb3cae94a7b6cf21, type: 3}
+  m_Name: SkillLibrary
+  m_EditorClassIdentifier: 
+  allSkills:
+  - skillID: 101
+    skillName: "\u5929\u7F61\u7B26"
+    icon: {fileID: 21300000, guid: 9f941ab1628ee1d41b134573fc7b1847, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u989D\u5916\u5524\u51FA\u4E00\u679A\u62A4\u8EAB\u7B26\u5492\u56F4\u7ED5\u5468\u8EAB"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+    - description: "\u989D\u5916\u5524\u51FA\u4E8C\u679A\u62A4\u8EAB\u7B26\u5492\u56F4\u7ED5\u5468\u8EAB"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+    - description: "\u989D\u5916\u5524\u51FA\u4E09\u679A\u62A4\u8EAB\u7B26\u5492\u56F4\u7ED5\u5468\u8EAB"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+    - description: "\u989D\u5916\u5524\u51FA\u56DB\u679A\u62A4\u8EAB\u7B26\u5492\u56F4\u7ED5\u5468\u8EAB"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+    - description: "\u989D\u5916\u5524\u51FA\u4E94\u679A\u62A4\u8EAB\u7B26\u5492\u56F4\u7ED5\u5468\u8EAB"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+  - skillID: 102
+    skillName: "\u7384\u98CE\u5492"
+    icon: {fileID: 21300000, guid: 9cfe159f8dc050445849f885fd1b5587, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u63D0\u5347\u7B26\u5492\u8FD0\u8F6C\u901F\u738710%\uFF0C\u4F7F\u9632\u5FA1\u66F4\u52A0\u5BC6\u4E0D\u900F\u98CE"
+      valueA: 10
+      valueB: 0
+      valueC: 0
+    - description: "\u63D0\u5347\u7B26\u5492\u8FD0\u8F6C\u901F\u738720%\uFF0C\u4F7F\u9632\u5FA1\u66F4\u52A0\u5BC6\u4E0D\u900F\u98CE"
+      valueA: 10
+      valueB: 0
+      valueC: 0
+    - description: "\u63D0\u5347\u7B26\u5492\u8FD0\u8F6C\u901F\u738730%\uFF0C\u4F7F\u9632\u5FA1\u66F4\u52A0\u5BC6\u4E0D\u900F\u98CE"
+      valueA: 10
+      valueB: 0
+      valueC: 0
+    - description: "\u63D0\u5347\u7B26\u5492\u8FD0\u8F6C\u901F\u738740%\uFF0C\u4F7F\u9632\u5FA1\u66F4\u52A0\u5BC6\u4E0D\u900F\u98CE"
+      valueA: 10
+      valueB: 0
+      valueC: 0
+    - description: "\u63D0\u5347\u7B26\u5492\u8FD0\u8F6C\u901F\u738750%\uFF0C\u4F7F\u9632\u5FA1\u66F4\u52A0\u5BC6\u4E0D\u900F\u98CE"
+      valueA: 10
+      valueB: 0
+      valueC: 0
+  - skillID: 103
+    skillName: "\u5E7F\u57DF\u9635"
+    icon: {fileID: 21300000, guid: a505f31c4420bc54e9d5714e1375526c, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u6269\u5F20\u7B26\u5492\u6D41\u8F6C\u7684\u8303\u56F40.5\u7C73\uFF0C\u4EE5\u6B64\u5FA1\u5B88\u66F4\u5E7F\u9614\u7684\u533A\u57DF"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u6269\u5F20\u7B26\u5492\u6D41\u8F6C\u7684\u8303\u56F41\u7C73\uFF0C\u4EE5\u6B64\u5FA1\u5B88\u66F4\u5E7F\u9614\u7684\u533A\u57DF"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u6269\u5F20\u7B26\u5492\u6D41\u8F6C\u7684\u8303\u56F41.5\u7C73\uFF0C\u4EE5\u6B64\u5FA1\u5B88\u66F4\u5E7F\u9614\u7684\u533A\u57DF"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u6269\u5F20\u7B26\u5492\u6D41\u8F6C\u7684\u8303\u56F42\u7C73\uFF0C\u4EE5\u6B64\u5FA1\u5B88\u66F4\u5E7F\u9614\u7684\u533A\u57DF"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u6269\u5F20\u7B26\u5492\u6D41\u8F6C\u7684\u8303\u56F43\u7C73\uFF0C\u4EE5\u6B64\u5FA1\u5B88\u66F4\u5E7F\u9614\u7684\u533A\u57DF"
+      valueA: 1
+      valueB: 0
+      valueC: 0
+  - skillID: 104
+    skillName: "\u7834\u519B\u529B"
+    icon: {fileID: 21300000, guid: 4f6d397b1fdc1ee4bb631cbf0ab9f33a, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u7825\u783A\u7B26\u5492\u7075\u5A01\uFF0C\u63D0\u5347\u78B0\u649E\u65F6\u7684\u9A71\u90AA\u5A01\u80FD5\u70B9"
+      valueA: 5
+      valueB: 0
+      valueC: 0
+    - description: "\u7825\u783A\u7B26\u5492\u7075\u5A01\uFF0C\u63D0\u5347\u78B0\u649E\u65F6\u7684\u9A71\u90AA\u5A01\u80FD10\u70B9"
+      valueA: 5
+      valueB: 0
+      valueC: 0
+    - description: "\u7825\u783A\u7B26\u5492\u7075\u5A01\uFF0C\u63D0\u5347\u78B0\u649E\u65F6\u7684\u9A71\u90AA\u5A01\u80FD15\u70B9"
+      valueA: 5
+      valueB: 0
+      valueC: 0
+    - description: "\u7825\u783A\u7B26\u5492\u7075\u5A01\uFF0C\u63D0\u5347\u78B0\u649E\u65F6\u7684\u9A71\u90AA\u5A01\u80FD25\u70B9"
+      valueA: 5
+      valueB: 0
+      valueC: 0
+    - description: "\u7825\u783A\u7B26\u5492\u7075\u5A01\uFF0C\u63D0\u5347\u78B0\u649E\u65F6\u7684\u9A71\u90AA\u5A01\u80FD30\u70B9"
+      valueA: 5
+      valueB: 0
+      valueC: 0
+  - skillID: 105
+    skillName: "\u795E\u884C\u6B65"
+    icon: {fileID: 21300000, guid: 781b851336d23794da2f1964090a54df, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u8EAB\u6CD5\u66F4\u8D8B\u7A33\u506510%\uFF0C\u884C\u8D70\u5982\u75BE\u98CE\u63A0\u5F71"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u8EAB\u6CD5\u66F4\u8D8B\u7A33\u506520%\uFF0C\u884C\u8D70\u5982\u75BE\u98CE\u63A0\u5F71"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u8EAB\u6CD5\u66F4\u8D8B\u7A33\u506530%\uFF0C\u884C\u8D70\u5982\u75BE\u98CE\u63A0\u5F71"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u8EAB\u6CD5\u66F4\u8D8B\u7A33\u506540%\uFF0C\u884C\u8D70\u5982\u75BE\u98CE\u63A0\u5F71"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+    - description: "\u8EAB\u6CD5\u66F4\u8D8B\u7A33\u506550%\uFF0C\u884C\u8D70\u5982\u75BE\u98CE\u63A0\u5F71"
+      valueA: 0.5
+      valueB: 0
+      valueC: 0
+  - skillID: 106
+    skillName: "\u6D17\u9AD3\u7ECF"
+    icon: {fileID: 21300000, guid: 001a19a8b2fa6b64f831ff9713cc170c, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u62D3\u5BBD\u7ECF\u8109\u6C14\u8840\u4E0A\u965050\uFF0C\u5E76\u4EE5\u6B64\u6E29\u517B\u5F53\u524D\u4F24\u52BF"
+      valueA: 50
+      valueB: 0
+      valueC: 0
+    - description: "\u62D3\u5BBD\u7ECF\u8109\u6C14\u8840\u4E0A\u9650100\uFF0C\u5E76\u4EE5\u6B64\u6E29\u517B\u5F53\u524D\u4F24\u52BF"
+      valueA: 50
+      valueB: 0
+      valueC: 0
+    - description: "\u62D3\u5BBD\u7ECF\u8109\u6C14\u8840\u4E0A\u9650150\uFF0C\u5E76\u4EE5\u6B64\u6E29\u517B\u5F53\u524D\u4F24\u52BF"
+      valueA: 50
+      valueB: 0
+      valueC: 0
+    - description: "\u62D3\u5BBD\u7ECF\u8109\u6C14\u8840\u4E0A\u9650200\uFF0C\u5E76\u4EE5\u6B64\u6E29\u517B\u5F53\u524D\u4F24\u52BF"
+      valueA: 50
+      valueB: 0
+      valueC: 0
+    - description: "\u62D3\u5BBD\u7ECF\u8109\u6C14\u8840\u4E0A\u9650500\uFF0C\u5E76\u4EE5\u6B64\u6E29\u517B\u5F53\u524D\u4F24\u52BF"
+      valueA: 300
+      valueB: 0
+      valueC: 0
+  - skillID: 107
+    skillName: "\u805A\u7075\u672F"
+    icon: {fileID: 21300000, guid: cda2f64b8d8c58b40b2f8466c61731da, type: 3}
+    type: 0
+    weaponPrefab: {fileID: 5788171980899336109, guid: 4b4ed1c4783b2cd459cf810136b551f8, type: 3}
+    levels:
+    - description: "\u589E\u5F3A\u611F\u609F\u5929\u5730\u7075\u6C14\u4E4B\u80FD\uFF0C\u63D0\u5347\u4FEE\u4E3A\u83B7\u53D6\u6548\u738720%"
+      valueA: 0.2
+      valueB: 0
+      valueC: 0
+    - description: "\u589E\u5F3A\u611F\u609F\u5929\u5730\u7075\u6C14\u4E4B\u80FD\uFF0C\u63D0\u5347\u4FEE\u4E3A\u83B7\u53D6\u6548\u738740%"
+      valueA: 0.2
+      valueB: 0
+      valueC: 0
+    - description: "\u589E\u5F3A\u611F\u609F\u5929\u5730\u7075\u6C14\u4E4B\u80FD\uFF0C\u63D0\u5347\u4FEE\u4E3A\u83B7\u53D6\u6548\u738760%"
+      valueA: 0.2
+      valueB: 0
+      valueC: 0
+    - description: "\u589E\u5F3A\u611F\u609F\u5929\u5730\u7075\u6C14\u4E4B\u80FD\uFF0C\u63D0\u5347\u4FEE\u4E3A\u83B7\u53D6\u6548\u738780%"
+      valueA: 0.2
+      valueB: 0
+      valueC: 0
+    - description: "\u589E\u5F3A\u611F\u609F\u5929\u5730\u7075\u6C14\u4E4B\u80FD\uFF0C\u63D0\u5347\u4FEE\u4E3A\u83B7\u53D6\u6548\u7387200%"
+      valueA: 1.2
+      valueB: 0
+      valueC: 0

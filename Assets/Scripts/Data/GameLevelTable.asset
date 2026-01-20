@@ -1,0 +1,223 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 34285df1c7f4518469d0ab942efe72ae, type: 3}
+  m_Name: GameLevelTable
+  m_EditorClassIdentifier: 
+  allLevels:
+  - displayTitle: "\u5173\u5361\u4E00"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map1Point
+    surviveDuration: 30
+    enemyHpMultiplier: 1
+    enemySpeedMultiplier: 1.05
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 3
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 9
+      spawnInterval: 2
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 24
+      spawnInterval: 1
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u4E8C"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map2Point
+    surviveDuration: 45
+    enemyHpMultiplier: 1.5
+    enemySpeedMultiplier: 1.1
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 2.6999998
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 13.500001
+      spawnInterval: 1.8
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 36
+      spawnInterval: 0.9
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u4E09"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map1Point
+    surviveDuration: 60
+    enemyHpMultiplier: 2
+    enemySpeedMultiplier: 1.15
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 2.25
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 18
+      spawnInterval: 1.5
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 48
+      spawnInterval: 0.75
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u56DB"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map2Point
+    surviveDuration: 90
+    enemyHpMultiplier: 3
+    enemySpeedMultiplier: 1.2
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 1.8000001
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 27.000002
+      spawnInterval: 1.2
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 72
+      spawnInterval: 0.6
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u4E94"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map1Point
+    surviveDuration: 120
+    enemyHpMultiplier: 4
+    enemySpeedMultiplier: 1.25
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 1.5
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 36
+      spawnInterval: 1
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 96
+      spawnInterval: 0.5
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u516D"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map2Point
+    surviveDuration: 150
+    enemyHpMultiplier: 6
+    enemySpeedMultiplier: 1.3
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 1.2
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 45
+      spawnInterval: 0.8
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 120
+      spawnInterval: 0.4
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u4E03"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map1Point
+    surviveDuration: 180
+    enemyHpMultiplier: 8
+    enemySpeedMultiplier: 1.35
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 0.75
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 54.000004
+      spawnInterval: 0.5
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 144
+      spawnInterval: 0.25
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+  - displayTitle: "\u5173\u5361\u516B"
+    previewImage: {fileID: 0}
+    spawnPointGroupName: Map2Point
+    surviveDuration: 300
+    enemyHpMultiplier: 10
+    enemySpeedMultiplier: 1.4
+    expGainMultiplier: 1
+    waves:
+    - waveName: "\u8BD5\u63A2"
+      startTime: 0
+      spawnInterval: 0.45000002
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u56F4\u653B"
+      startTime: 90
+      spawnInterval: 0.3
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}
+    - waveName: "\u6B7B\u6597"
+      startTime: 240
+      spawnInterval: 0.15
+      prefabs:
+      - {fileID: 4218947503647199669, guid: 9336a8a6a1cc2a2458ab2334e6464df8, type: 3}
+      - {fileID: 4218947503647199669, guid: 7442343ca1dad674db834fe23c9ca7b2, type: 3}

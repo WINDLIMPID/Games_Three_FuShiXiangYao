@@ -1,154 +1,63 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.EventSystems;
-using TMPro;
+using TMPro; // 引用 TMP 命名空间
+using System.Collections.Generic;
 using System.Collections;
+using System.Linq;
 using UnityEngine.SceneManagement;
 
-public class LevelMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class LevelMenuManager : MonoBehaviour
 {
-    [Header("=== 核心容器 ===")]
-    public RectTransform contentParent;
+    [Header("=== 核心组件 ===")]
+    public ScrollRect scrollView;
+    public RectTransform contentRect;
+    public GameObject roleIcon;
+
+    [Header("=== 关卡按钮配置 ===")]
+    // 建议手动按顺序拖拽 LevelButton 到这里
+    public List<LevelButton> allLevelButtons = new List<LevelButton>();
 
     [Header("=== 功能按钮 ===")]
     public Button settingsButton;
-    public Button startGameButton;
-    public TextMeshProUGUI startBtnText;
-
-    [Header("=== 翻页按钮 ===")]
-    public Button topButton;      // 上箭头 (看上面的页)
-    public Button bottomButton;   // 下箭头 (看下面的页)
-
-    [Header("=== 生成设置 ===")]
-    public GameObject mapChunkPrefab;
-    public int levelsPerChunk = 5;
-    public GameObject roleIcon;
-
-    [Header("=== 滑动参数 ===")]
-    public float fastSwipeThreshold = 1000f;
-    public float fastSwipeMinMove = 50f;
-    [Range(0.1f, 0.9f)]
-    public float slowDragRatio = 0.5f;
-    public float snapDuration = 0.25f;
+    public Button startGameButton;      // "开始挑战" 按钮
+    public TextMeshProUGUI startBtnText; // 按钮上的文字 (可选)
 
     // --- 内部状态 ---
-    // 🔥 强制固定高度 1920
-    private float _pageHeight = 1920f;
-    private int _totalPageCount = 0;
-    private int _currentPageIndex = 0;
-    private int _lastPlayedLevel = 1;
-    private int _currentSelectedLevel = -1;
-    private int _loadedMaxPage = -1;
+    private int _unlockedLevelCount = 1;
+    private int _currentSelectedLevel = -1; // 当前选中的关卡
 
-    // --- 滑动计算 ---
-    private float _startDragContentY;
-    private float _startPointerY;
-    private float _startTime;
-    private bool _isAnimating = false;
-
-    // 🔥 改为 IEnumerator 以等待 UI 布局完成
     IEnumerator Start()
     {
-        // 1. 强制顶部对齐
-        if (contentParent != null)
-        {
-            contentParent.pivot = new Vector2(0.5f, 1f);
-            contentParent.anchorMin = new Vector2(0.5f, 1f);
-            contentParent.anchorMax = new Vector2(0.5f, 1f);
-        }
+        // 1. 读取进度
+        LoadProgress();
 
-        // 读取存档
-        if (SaveManager.Instance != null) _lastPlayedLevel = SaveManager.Instance.GetUnlockedLevel();
-        if (GlobalConfig.Instance != null && GlobalConfig.Instance.currentLevelIndex > 0)
-            _lastPlayedLevel = GlobalConfig.Instance.currentLevelIndex;
+        // 默认选中最新解锁的关卡
+        _currentSelectedLevel = _unlockedLevelCount;
 
-        _currentSelectedLevel = _lastPlayedLevel;
+        // 2. 初始化所有按钮
+        RefreshLevelButtons();
 
-        if (roleIcon != null)
-        {
-            roleIcon.SetActive(false);
-            if (roleIcon.GetComponent<Image>()) roleIcon.GetComponent<Image>().raycastTarget = false;
-        }
+        // 3. 放置小人 & 聚焦
+        PlaceRoleOnLevel(_unlockedLevelCount);
 
-        // 2. 生成所有页面
-        CalculateTotalPages();
-        for (int i = 0; i < _totalPageCount; i++) LoadPage(i);
+        // 4. 刷新开始按钮状态 (显示最新关卡名字)
+        UpdateStartButtonState();
 
-        // 强制刷新一次布局
-        LayoutRebuilder.ForceRebuildLayoutImmediate(contentParent);
-
-        // 🔥🔥🔥 关键修改：等待一帧，让 Unity 完成 Layout 计算，防止位置被弹回
         yield return null;
 
-        // =========================================================
-        // 核心：计算初始位置
-        // =========================================================
+        // 5. 聚焦到最新关卡
+        FocusOnLevel(_unlockedLevelCount);
 
-        // 算出当前进度在第几页
-        int targetPageIndex = (_lastPlayedLevel - 1) / levelsPerChunk;
+        // 6. 绑定按钮事件
+        BindButtons();
+    }
 
-        // 防止越界
-        if (targetPageIndex < 0) targetPageIndex = 0;
-        targetPageIndex = _totalPageCount - 1;
+    void BindButtons()
+    {
+        if (settingsButton)
+            settingsButton.onClick.AddListener(() => GlobalCanvas.Instance?.ToggleSettings());
 
-        _currentPageIndex = targetPageIndex;
-
-        // 🔥 强制位置：页码 * 1920
-        float initY = targetPageIndex * 1920f;
-
-        if (contentParent != null)
-        {
-            contentParent.anchoredPosition = new Vector2(contentParent.anchoredPosition.x, initY);
-        }
-        // =========================================================
-
-        UpdateButtonState();
-        UpdateStartButtonState();
-        InitRolePosition();
-
-        // 3. 按钮绑定
-        if (topButton)
-        {
-            topButton.onClick.RemoveAllListeners();
-            // 上箭头 -> Index - 1 (回看上面)
-            topButton.onClick.AddListener(() => GoToPage(_currentPageIndex - 1));
-        }
-        if (bottomButton)
-        {
-            bottomButton.onClick.RemoveAllListeners();
-            // 下箭头 -> Index + 1 (看下面)
-            bottomButton.onClick.AddListener(() => GoToPage(_currentPageIndex + 1));
-        }
-
-        if (settingsButton) settingsButton.onClick.AddListener(() => GlobalCanvas.Instance?.ToggleSettings());
-        /*
-        if (homeButton) homeButton.onClick.AddListener(() => SceneController.Instance?.LoadMainMenu());
-
-        // 🔥🔥🔥 核心修改：Home 按钮逻辑
-        if (homeButton)
-        {
-            homeButton.onClick.RemoveAllListeners();
-            homeButton.onClick.AddListener(() => {
-                // 1. 既然玩家点了 Home，说明他想回主标题界面，所以要把“保持在选关”的状态取消
-                if (GlobalConfig.Instance != null)
-                    GlobalConfig.Instance.isLevelSelectionOpen = false;
-
-                // 2. 尝试直接调用 MainMenu 的方法切换（不用重载场景，更流畅）
-                MainMenu mainMenu = FindObjectOfType<MainMenu>();
-                if (mainMenu != null)
-                {
-                    mainMenu.StartMainUI(true);
-                    mainMenu.StartRoleUI(false);
-                    mainMenu.StartChooseLevel(false);
-                }
-                else
-                {
-                    // 保底：如果找不到 MainMenu 脚本，才重载场景
-                    SceneController.Instance?.LoadMainMenu();
-                }
-            });
-        }*/
-
+        // 🔥 绑定开始按钮事件
         if (startGameButton)
         {
             startGameButton.onClick.RemoveAllListeners();
@@ -156,134 +65,112 @@ public class LevelMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         }
     }
 
-    void InitRolePosition()
-    {
-        foreach (Transform child in contentParent)
-        {
-            MapChunk chunk = child.GetComponent<MapChunk>();
-            if (chunk == null) continue;
+    // =========================================================
+    // 🔥 核心交互逻辑
+    // =========================================================
 
-            string[] nameParts = child.name.Split('_');
-            if (nameParts.Length < 2) continue;
-
-            if (int.TryParse(nameParts[1], out int pageIndex))
-            {
-                int startLevel = pageIndex * levelsPerChunk + 1;
-                CheckAndPlaceRoleOnStart(chunk, startLevel);
-            }
-        }
-    }
-
-    void CalculateTotalPages()
-    {
-        int totalLevels = 8;
-        if (GlobalConfig.Instance?.levelTable != null) totalLevels = GlobalConfig.Instance.levelTable.allLevels.Count;
-        _totalPageCount = Mathf.CeilToInt((float)totalLevels / levelsPerChunk);
-        if (_totalPageCount < 1) _totalPageCount = 1;
-    }
-
-    void LoadPage(int pageIndex)
-    {
-        string pageName = $"Page_{pageIndex}";
-        if (contentParent.Find(pageName) == null)
-        {
-            GameObject chunk = Instantiate(mapChunkPrefab, contentParent);
-            chunk.name = pageName;
-
-            MapChunk script = chunk.GetComponent<MapChunk>();
-            if (script != null)
-            {
-                int startLevel = pageIndex * levelsPerChunk + 1;
-                int totalLevels = GlobalConfig.Instance ? GlobalConfig.Instance.levelTable.allLevels.Count : _totalPageCount * levelsPerChunk;
-                script.SetupChunk(startLevel, totalLevels, HandleLevelClick);
-            }
-            if (pageIndex > _loadedMaxPage) _loadedMaxPage = pageIndex;
-        }
-    }
-
-    public void OnBeginDrag(PointerEventData eventData)
-    {
-        if (_isAnimating) return;
-        StopAllCoroutines();
-        _isAnimating = false;
-        _startDragContentY = contentParent.anchoredPosition.y;
-        _startPointerY = eventData.position.y;
-        _startTime = Time.time;
-    }
-
-    public void OnDrag(PointerEventData eventData)
-    {
-        if (_isAnimating) return;
-        float pointerDelta = eventData.position.y - _startPointerY;
-
-        // 往上滑(Delta > 0) -> 内容Y变大 -> 看下面的内容
-        float targetY = _startDragContentY + pointerDelta;
-
-        float minLimit = 0f;
-        float maxLimit = (_totalPageCount - 1) * 1920f;
-        targetY = Mathf.Clamp(targetY, minLimit, maxLimit);
-
-        contentParent.anchoredPosition = new Vector2(contentParent.anchoredPosition.x, targetY);
-    }
-
-    public void OnEndDrag(PointerEventData eventData)
-    {
-        if (_isAnimating) return;
-        float dis = contentParent.anchoredPosition.y - _startDragContentY;
-        if (Mathf.Abs(dis) < 1f) { GoToPage(_currentPageIndex); return; }
-
-        int target = _currentPageIndex;
-        if ((Mathf.Abs(dis / 1920f) > slowDragRatio) || (Mathf.Abs(dis) > fastSwipeMinMove && Mathf.Abs(dis / (Time.time - _startTime)) > fastSwipeThreshold))
-        {
-            if (dis > 0) target++;
-            else target--;
-        }
-        GoToPage(target);
-    }
-
-    void GoToPage(int targetPage)
-    {
-        targetPage = Mathf.Clamp(targetPage, 0, _totalPageCount - 1);
-        StartCoroutine(SmoothSnapToPage(targetPage));
-    }
-
-    IEnumerator SmoothSnapToPage(int targetPageIndex)
-    {
-        _isAnimating = true;
-        _currentPageIndex = targetPageIndex;
-        UpdateButtonState();
-
-        float targetY = targetPageIndex * 1920f;
-        float startY = contentParent.anchoredPosition.y;
-        float timer = 0f;
-        while (timer < snapDuration)
-        {
-            timer += Time.deltaTime;
-            float t = 1f - Mathf.Pow(1f - (timer / snapDuration), 4f);
-            contentParent.anchoredPosition = new Vector2(contentParent.anchoredPosition.x, Mathf.Lerp(startY, targetY, t));
-            yield return null;
-        }
-        contentParent.anchoredPosition = new Vector2(contentParent.anchoredPosition.x, targetY);
-        _isAnimating = false;
-    }
-
-    public void HandleLevelClick(int levelIndex, LevelButton btnScript)
+    // 点击关卡平台时触发 (只选中，不进游戏)
+    void OnLevelButtonClicked(int levelIndex, LevelButton btn)
     {
         _currentSelectedLevel = levelIndex;
-        MoveRoleToButton(btnScript);
+
+        // 1. 小人跳过去
+        MoveRoleToButton(btn);
+
+        // 2. 刷新开始按钮的文字/状态
         UpdateStartButtonState();
+
+        // ❌ 删除了 EnterLevel(levelIndex)，现在点击平台不会直接进游戏了
     }
 
-    void CheckAndPlaceRoleOnStart(MapChunk chunk, int startLevelOfChunk)
+    // 点击“开始挑战”按钮时触发
+    void OnStartButtonClick()
     {
-        for (int i = 0; i < chunk.levelButtons.Count; i++)
+        // 只有选中的关卡有效时才进入
+        if (_currentSelectedLevel > 0)
         {
-            if ((startLevelOfChunk + i) == _currentSelectedLevel)
-            {
-                MoveRoleToButton(chunk.levelButtons[i]);
-                break;
-            }
+            EnterLevel(_currentSelectedLevel);
         }
+    }
+
+    // 刷新开始按钮的显示
+    void UpdateStartButtonState()
+    {
+        if (startGameButton == null) return;
+
+        // 确保有选中关卡
+        bool hasSelection = _currentSelectedLevel > 0;
+        startGameButton.interactable = hasSelection;
+
+        // 如果有文字组件，更新显示 (例如: "开始挑战 第5关")
+        if (startBtnText != null && hasSelection)
+        {
+            string levelName = $"第 {_currentSelectedLevel} 关";
+
+            // 尝试获取配置里的名字
+            if (GlobalConfig.Instance?.levelTable?.allLevels != null)
+            {
+                int index = _currentSelectedLevel - 1;
+                if (index >= 0 && index < GlobalConfig.Instance.levelTable.allLevels.Count)
+                {
+                    levelName = GlobalConfig.Instance.levelTable.allLevels[index].displayTitle;
+                }
+            }
+
+            startBtnText.text = "开始挑战\n<size=40>" + levelName + "</size>";
+        }
+    }
+
+    // =========================================================
+    // 基础功能
+    // =========================================================
+
+    void LoadProgress()
+    {
+        _unlockedLevelCount = 1;
+        if (SaveManager.Instance != null)
+        {
+            _unlockedLevelCount = SaveManager.Instance.GetUnlockedLevel();
+        }
+        else if (GlobalConfig.Instance != null && GlobalConfig.Instance.currentLevelIndex > 0)
+        {
+            _unlockedLevelCount = GlobalConfig.Instance.currentLevelIndex;
+        }
+
+        if (allLevelButtons.Count > 0)
+            _unlockedLevelCount = Mathf.Clamp(_unlockedLevelCount, 1, allLevelButtons.Count);
+    }
+
+    void RefreshLevelButtons()
+    {
+        if (allLevelButtons == null || allLevelButtons.Count == 0)
+        {
+            allLevelButtons = contentRect.GetComponentsInChildren<LevelButton>()
+                .OrderBy(b => b.gameObject.name.Length)
+                .ThenBy(b => b.gameObject.name)
+                .ToList();
+        }
+
+        for (int i = 0; i < allLevelButtons.Count; i++)
+        {
+            int levelIndex = i + 1;
+            LevelButton btn = allLevelButtons[i];
+
+            LevelConfigEntry data = null;
+            if (GlobalConfig.Instance?.levelTable?.allLevels != null && i < GlobalConfig.Instance.levelTable.allLevels.Count)
+            {
+                data = GlobalConfig.Instance.levelTable.allLevels[i];
+            }
+
+            bool isLocked = levelIndex > _unlockedLevelCount;
+            btn.Setup(levelIndex, data, isLocked, OnLevelButtonClicked);
+        }
+    }
+
+    void PlaceRoleOnLevel(int levelIndex)
+    {
+        if (levelIndex <= 0 || levelIndex > allLevelButtons.Count) return;
+        MoveRoleToButton(allLevelButtons[levelIndex - 1]);
     }
 
     void MoveRoleToButton(LevelButton btn)
@@ -296,38 +183,40 @@ public class LevelMenuManager : MonoBehaviour, IBeginDragHandler, IDragHandler, 
         rt.localScale = Vector3.one;
     }
 
-    void UpdateButtonState()
+    void FocusOnLevel(int levelIndex)
     {
-        if (topButton) topButton.gameObject.SetActive(_currentPageIndex > 0);
-        if (bottomButton) bottomButton.gameObject.SetActive(_currentPageIndex < _totalPageCount - 1);
+        if (scrollView == null || contentRect == null) return;
+        if (levelIndex <= 0 || levelIndex > allLevelButtons.Count) return;
+
+        LevelButton targetBtn = allLevelButtons[levelIndex - 1];
+        RectTransform targetRect = targetBtn.GetComponent<RectTransform>();
+
+        float viewportHeight = scrollView.viewport.rect.height;
+        float contentHeight = contentRect.rect.height;
+        float targetY = targetRect.anchoredPosition.y;
+        float finalContentY = (viewportHeight / 2f) - targetY;
+
+        float maxY = 0f;
+        float minY = -(contentHeight - viewportHeight);
+
+        if (contentHeight < viewportHeight) finalContentY = 0;
+        else finalContentY = Mathf.Clamp(finalContentY, minY, maxY);
+
+        contentRect.anchoredPosition = new Vector2(contentRect.anchoredPosition.x, finalContentY);
     }
 
-    void UpdateStartButtonState()
+    public void EnterLevel(int levelIndex)
     {
-        if (startGameButton == null) return;
-        startGameButton.interactable = true;
-        if (startBtnText != null)
-        {
-            string levelName = "未知关卡";
-            if (GlobalConfig.Instance?.levelTable?.allLevels != null && _currentSelectedLevel - 1 < GlobalConfig.Instance.levelTable.allLevels.Count && _currentSelectedLevel - 1 >= 0)
-                levelName = GlobalConfig.Instance.levelTable.allLevels[_currentSelectedLevel - 1].displayTitle;
-            startBtnText.text = $"开始挑战\n<size=40>{levelName}</size>";
-        }
-    }
-
-    void OnStartButtonClick()
-    {
-        if (_currentSelectedLevel <= 0) return;
         if (GlobalConfig.Instance != null)
         {
-            GlobalConfig.Instance.currentLevelIndex = _currentSelectedLevel;
-            int configIndex = _currentSelectedLevel - 1;
-            if (configIndex >= 0 && configIndex < GlobalConfig.Instance.levelTable.allLevels.Count)
-                GlobalConfig.Instance.currentLevelConfig = GlobalConfig.Instance.levelTable.allLevels[configIndex];
+            GlobalConfig.Instance.currentLevelIndex = levelIndex;
+            if (GlobalConfig.Instance.levelTable != null && (levelIndex - 1) < GlobalConfig.Instance.levelTable.allLevels.Count)
+            {
+                GlobalConfig.Instance.currentLevelConfig = GlobalConfig.Instance.levelTable.allLevels[levelIndex - 1];
+            }
         }
+
         if (SceneController.Instance != null) SceneController.Instance.LoadBattle();
         else SceneManager.LoadScene("BattleScene");
     }
-
-    void CalculatePageHeight() { }
 }

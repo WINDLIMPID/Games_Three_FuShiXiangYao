@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class MainMenu : MonoBehaviour
 {
@@ -8,6 +9,9 @@ public class MainMenu : MonoBehaviour
     public GameObject roleUI;
 
     public GameObject mainUI;
+
+    [Header("🔥 新增：漫画播放器")]
+    public StoryPlayerUI storyPlayer;
 
     [Header("功能模块")]
     public DailySignInManager signInManager; // 签到管理器
@@ -19,6 +23,9 @@ public class MainMenu : MonoBehaviour
     // 建议把 Title 设为 "无尽试炼"，时间设为 999999
     public LevelConfigEntry endlessLevelConfig;
 
+
+    private const string PREF_STORY_WATCHED = "HasWatchedIntroStory"; // 存档Key
+
     void Start()
     {
         // 1. 播放 UI BGM
@@ -26,6 +33,8 @@ public class MainMenu : MonoBehaviour
         {
             AudioManager.Instance.PlayMusic("UIBGM");
         }
+
+
 
         // 2. 检查登录状态
         CheckLoginStatus();
@@ -70,6 +79,80 @@ public class MainMenu : MonoBehaviour
         if (AntiAddictionManager.Instance != null && !AntiAddictionManager.Instance.isVerified)
         {
             if (realNamePanel != null) realNamePanel.SetActive(true);
+        }
+        else
+        {
+            // 🔥 实名已通过 -> 进入正常的初始化流程
+            InitGameFlow();
+        }
+    }
+
+    // 🔥🔥🔥 核心逻辑：决定是播漫画还是显示主界面
+    public void InitGameFlow()
+    {
+        // 检查是否看过漫画 (0=没看过, 1=看过)
+        bool hasWatched = PlayerPrefs.GetInt(PREF_STORY_WATCHED, 0) == 1;
+
+        if (!hasWatched)
+        {
+            // === 情况 A: 第一次进入 ===
+            // 隐藏主界面
+            StartMainUI(false);
+            StartRoleUI(false);
+
+            // 播放漫画
+            if (storyPlayer != null)
+            {
+                storyPlayer.PlayStory(() => {
+                    // 漫画播完的回调：
+                    Debug.Log("漫画播放完毕，正式进入游戏");
+
+                    // 1. 记录已看过
+                    PlayerPrefs.SetInt(PREF_STORY_WATCHED, 1);
+                    PlayerPrefs.Save();
+
+                    // 2. 显示主界面
+                    ShowNormalUI();
+                });
+            }
+            else
+            {
+                // 如果忘了拖脚本，直接进
+                ShowNormalUI();
+            }
+        }
+        else
+        {
+            // === 情况 B: 老玩家，直接显示主界面 ===
+            ShowNormalUI();
+        }
+    }
+
+    // 显示正常的主界面逻辑
+    void ShowNormalUI()
+    {
+        if (GlobalConfig.Instance != null && GlobalConfig.Instance.isLevelSelectionOpen)
+        {
+            StartChooseLevel(true);
+        }
+        else
+        {
+            StartMainUI(true);
+            StartRoleUI(false);
+            StartChooseLevel(false);
+        }
+    }
+
+    // 🔥 手动点击“回看漫画”按钮
+    public void OnReplayStoryClicked()
+    {
+        if (storyPlayer != null)
+        {
+            // 这里的回调是空的，或者只是单纯关闭，不需要进游戏
+            storyPlayer.PlayStory(() => {
+                // 播完啥也不用做，StoryPlayerUI 会自己把自己关掉
+                Debug.Log("重温结束");
+            });
         }
     }
 

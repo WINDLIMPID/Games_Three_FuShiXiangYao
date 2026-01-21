@@ -2,59 +2,62 @@
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 
 public class EnemySpawner : MonoBehaviour
 {
+    public static EnemySpawner Instance;
+
     [Header("=== 核心引用 ===")]
-    // 🔥 新增：引用新的 UI 控制脚本
     public VictoryUI victoryUI;
+    public UI_EndlessSettlement endScoreUI;
 
-    [Header("=== 核心设置 (自动读取) ===")]
+    [Header("=== 核心设置 ===")]
     public Transform[] spawnPoints;
-
-    [Header("=== 玩家生成设置 ===")]
     public GameObject playerManagerPrefab;
 
     [Header("=== 战斗 UI - HUD 显示 ===")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI stageNameText;
+    public TextMeshProUGUI scoreText;
 
-    // 注意：原本的 victoryPanel, backButton, nextButton 等都被移除了
-    // 因为它们现在由 VictoryUI 脚本接管
+    [Header("=== 战斗 UI - 按钮 ===")]
+    public Button settingsButton;
+    public Button homeButton;
+    public Button replayButton;
 
-    [Header("=== 战斗 UI - 顶部功能按钮 (HUD) ===")]
-    public Button settingsButton; // ⚙️ 设置按钮
-    public Button homeButton;     // 🏠 主页按钮
-    public Button replayButton;   // 🔄 重玩按钮
-
-    [Header("=== 关卡设置 (自动读取) ===")]
+    [Header("=== 关卡数据 ===")]
     public int currentLevelIndex = 1;
     public float levelWinTime = 60f;
-
-    [Header("波次配置")]
     public List<EnemyWave> waves = new List<EnemyWave>();
     public int maxEnemyCount = 300;
 
-    // --- 内部变量 ---
+    [Header("无尽模式状态")]
+    public int currentScore = 0;
+    public bool isSpawningPaused = false;
+
+    // 内部变量
     private float _gameTime = 0f;
     private float _spawnTimer = 0f;
     private int _currentWaveIndex = 0;
     private bool _isLevelFinished = false;
     private Transform _playerTransform;
 
+    public bool IsEndlessMode => levelWinTime > 36000f;
+
+    void Awake()
+    {
+        Instance = this;
+    }
+
     void Start()
     {
-        // 0. 自动查找引用 (防止忘记拖拽)
-        if (victoryUI == null)
-        {
-            victoryUI = FindObjectOfType<VictoryUI>();
-        }
+        if (victoryUI == null) victoryUI = FindObjectOfType<VictoryUI>();
 
-        // 1. 初始化配置
+        // 读取配置
         string targetMapName = "Map1Point";
-
         if (GlobalConfig.Instance != null && GlobalConfig.Instance.currentLevelConfig != null)
         {
             var config = GlobalConfig.Instance.currentLevelConfig;
@@ -69,55 +72,106 @@ public class EnemySpawner : MonoBehaviour
             }
         }
 
-        // 2. 找点位并生成玩家
-        FindSpawnPointsAndSetupPlayer(targetMapName);
+        // 仅无尽模式显示分数
+        if (scoreText != null)
+        {
+            scoreText.gameObject.SetActive(IsEndlessMode);
+            if (IsEndlessMode) scoreText.text = "击杀: 0";
+        }
 
-        // 3. 绑定 HUD 功能按钮 (设置、主页、重玩)
+        FindSpawnPointsAndSetupPlayer(targetMapName);
         BindFunctionButtons();
 
-        // 4. (已删除) BindVictoryButtons() -> 逻辑已移交 VictoryUI
+        if (PlayerPrefs.GetInt("IsTutorialFinished", 0) == 0)
+        {
+            isSpawningPaused = true;
+        }
+    }
+
+    public void StartSpawning() => isSpawningPaused = false;
+
+    public void AddScore(int amount = 1)
+    {
+        if (IsEndlessMode)
+        {
+            currentScore += amount;
+            if (scoreText != null) scoreText.text = "击杀: " + currentScore;
+        }
     }
 
     // =========================================================
-    // 绑定顶部功能按钮 (Settings, Home, Replay) - 这些还在 HUD 上
+    // 🔥🔥🔥 核心修复：彻底打扫战场 (怪 + 经验球)
+    // =========================================================
+    public void ClearBattlefield()
+    {
+        // 1. 清理敌人
+        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
+        foreach (var enemy in enemies)
+        {
+            if (PoolManager.Instance != null) PoolManager.Instance.Despawn(enemy);
+            else Destroy(enemy);
+        }
+
+        // 2. 🔥🔥 关键：清理所有经验球！防止在那1秒等待期内吃到经验升级
+        ExpGem[] gems = FindObjectsOfType<ExpGem>();
+        foreach (var gem in gems)
+        {
+            if (PoolManager.Instance != null) PoolManager.Instance.Despawn(gem.gameObject);
+            else Destroy(gem.gameObject);
+        }
+
+        // 3. 🔥🔥 保底：如果有升级弹窗正在显示，强制关掉
+        if (UpgradeManager.Instance != null && UpgradeManager.Instance.levelUpPanel != null)
+        {
+            if (UpgradeManager.Instance.levelUpPanel.activeSelf)
+            {
+                UpgradeManager.Instance.levelUpPanel.SetActive(false);
+                Time.timeScale = 1f; // 恢复时间，避免卡死
+            }
+        }
+
+        Debug.Log($"🧹 战场大扫除完毕 (清除敌人: {enemies.Length}, 经验球: {gems.Length})");
+    }
+
+    // =========================================================
+    // 按钮逻辑
     // =========================================================
     void BindFunctionButtons()
     {
-        // 1. 设置按钮
         if (settingsButton != null)
         {
             settingsButton.onClick.RemoveAllListeners();
             settingsButton.onClick.AddListener(() => {
-                if (GlobalCanvas.Instance != null)
-                {
-                    GlobalCanvas.Instance.ToggleSettings();
-                }
-                else
-                {
-                    Debug.LogWarning("场景中没有 GlobalCanvas，无法打开设置面板！");
-                }
+                if (GlobalCanvas.Instance != null) GlobalCanvas.Instance.ToggleSettings();
             });
         }
 
-        // 2. 主页按钮
+        // 🔥 Home 按钮逻辑
         if (homeButton != null)
         {
             homeButton.onClick.RemoveAllListeners();
             homeButton.onClick.AddListener(() => {
-                Time.timeScale = 1f; // 确保时间恢复
-                if (SceneController.Instance != null)
-                    SceneController.Instance.LoadMainMenu();
+
+                _isLevelFinished = true; // 锁定状态
+                ClearBattlefield();      // 🔥 瞬间清空所有东西
+
+                if (IsEndlessMode)
+                {
+                    StartCoroutine(DelayedEndlessOverProcess());
+                }
                 else
-                    SceneManager.LoadScene("MainMenuScene");
+                {
+                    StartCoroutine(DelayedBackHomeProcess());
+                }
             });
         }
 
-        // 3. 重玩按钮
         if (replayButton != null)
         {
             replayButton.onClick.RemoveAllListeners();
             replayButton.onClick.AddListener(() => {
-                Time.timeScale = 1f; // 确保时间恢复
+                Time.timeScale = 1f;
+                ClearBattlefield(); // 重玩也要清
                 if (SceneController.Instance != null)
                     SceneController.Instance.ReloadCurrentScene();
                 else
@@ -126,133 +180,165 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // =========================================================
-    // 核心逻辑：寻找点位 & 生成玩家
-    // =========================================================
-    void FindSpawnPointsAndSetupPlayer(string mapNodeName)
+    IEnumerator DelayedBackHomeProcess()
     {
-        GameObject topRoot = GameObject.Find("EnemyCreatPoint");
-        if (topRoot == null)
-        {
-            Debug.LogError("❌ 找不到 [EnemyCreatPoint]！");
-            return;
-        }
+        // 安全的1秒留白
+        yield return new WaitForSecondsRealtime(1.0f);
 
-        Transform mapRoot = topRoot.transform.Find(mapNodeName);
-        if (mapRoot == null)
-        {
-            Debug.LogError($"❌ 找不到子物体 [{mapNodeName}]！");
-            return;
-        }
-
-        // 怪物点位
-        Transform enemyContainer = mapRoot.Find("EnemyPoint");
-        if (enemyContainer != null)
-        {
-            int count = enemyContainer.childCount;
-            spawnPoints = new Transform[count];
-            for (int i = 0; i < count; i++)
-                spawnPoints[i] = enemyContainer.GetChild(i);
-        }
-
-        // 玩家生成
-        Transform playerContainer = mapRoot.Find("PlayerPoint");
-        if (playerContainer != null && playerContainer.childCount > 0)
-        {
-            Transform startPoint = playerContainer.GetChild(0);
-            Vector3 spawnPos = startPoint.position;
-
-            GameObject oldManager = GameObject.Find("PlayerManager");
-            if (oldManager != null) Destroy(oldManager);
-
-            if (playerManagerPrefab != null)
-            {
-                GameObject newManager = Instantiate(playerManagerPrefab, spawnPos, Quaternion.identity);
-                newManager.name = "PlayerManager";
-
-                Transform realPlayer = newManager.transform.Find("Player");
-                if (realPlayer != null)
-                {
-                    _playerTransform = realPlayer;
-                }
-                else
-                {
-                    foreach (Transform child in newManager.transform)
-                    {
-                        if (child.CompareTag("Player")) { _playerTransform = child; break; }
-                    }
-                }
-            }
-        }
+        Time.timeScale = 1f;
+        if (SceneController.Instance != null)
+            SceneController.Instance.LoadMainMenu();
+        else
+            SceneManager.LoadScene("MainMenuScene");
     }
 
+    // =========================================================
+    // 游戏循环
+    // =========================================================
     void Update()
     {
-        if (_isLevelFinished) return;
+        if (_isLevelFinished || isSpawningPaused) return;
         if (_playerTransform == null) return;
 
-        // 检查玩家血量
-        var playerHealth = _playerTransform.GetComponent<Health>();
-        if (playerHealth != null && playerHealth.currentHealth <= 0) return;
-
-        // 1. 计时
         _gameTime += Time.deltaTime;
         UpdateTimerUI();
 
-        // 2. 胜利判定
-        if (_gameTime >= levelWinTime)
+        if (!IsEndlessMode && _gameTime >= levelWinTime)
         {
             WinGame();
             return;
         }
 
-        // 3. 波次控制
         if (_currentWaveIndex < waves.Count - 1)
         {
             if (_gameTime >= waves[_currentWaveIndex + 1].startTime)
                 _currentWaveIndex++;
         }
 
-        // 4. 刷怪
         UpdateSpawning();
     }
 
     void UpdateTimerUI()
     {
-        if (timerText != null)
+        if (timerText == null) return;
+
+        if (IsEndlessMode)
         {
-            // 判定：如果目标时间特别大，说明是“无尽模式”
-            if (levelWinTime > 9999)
+            int m = Mathf.FloorToInt(_gameTime / 60F);
+            int s = Mathf.FloorToInt(_gameTime % 60F);
+            timerText.text = $"<color=#FFD700>∞ {m:00}:{s:00}</color>";
+            timerText.transform.localScale = Vector3.one;
+        }
+        else
+        {
+            float remaining = Mathf.Max(0, levelWinTime - _gameTime);
+            int m = Mathf.FloorToInt(remaining / 60F);
+            int s = Mathf.FloorToInt(remaining % 60F);
+            timerText.text = $"{m:00}:{s:00}";
+
+            // 倒计时呼吸特效
+            if (remaining <= 5f)
             {
-                // 🔥🔥🔥 修改核心：无尽模式显示“已生存时间” (正向计时)
-
-                // 计算游戏已经进行了多久 (_gameTime)
-                int minutes = Mathf.FloorToInt(_gameTime / 60F);
-                int seconds = Mathf.FloorToInt(_gameTime % 60F);
-
-                // 显示格式：无限符号 + 时间 (例如: ∞ 05:30)
-                // 我加了个金色 (<color=#FFD700>) 让它看起来比较特别
-                timerText.text = string.Format("<color=#FFD700>∞ {0:00}:{1:00}</color>", minutes, seconds);
+                timerText.color =new Color32(142,0,0,255);
+                float pulseSpeed = (remaining <= 5f) ? 1 : 0.5f;
+                float scale = 1.0f + Mathf.PingPong(Time.time * pulseSpeed, 0.2f);
+                timerText.transform.localScale = Vector3.one * scale;
             }
             else
             {
-                // --- 剧情模式：保持原有的倒计时逻辑 ---
-                float remainingTime = Mathf.Max(0, levelWinTime - _gameTime);
-                int minutes = Mathf.FloorToInt(remainingTime / 60F);
-                int seconds = Mathf.FloorToInt(remainingTime % 60F);
-                timerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
-
-                // 最后 5 秒变红警告
-                if (remainingTime <= 5f) timerText.color = Color.red;
-                else timerText.color = Color.white;
+                timerText.color = Color.white;
+                timerText.transform.localScale = Vector3.one;
             }
         }
     }
 
+    // =========================================================
+    // 胜利逻辑
+    // =========================================================
+    void WinGame()
+    {
+        _isLevelFinished = true;
+        Debug.Log("🎉 时间到！清理战场...");
+
+        // 1. 瞬间清怪 + 清经验球
+        ClearBattlefield();
+
+        // 2. 等待1秒再出结算
+        StartCoroutine(DelayedWinProcess());
+    }
+
+    IEnumerator DelayedWinProcess()
+    {
+        yield return new WaitForSecondsRealtime(1.0f);
+
+        if (SaveManager.Instance != null) SaveManager.Instance.CompleteLevel(currentLevelIndex);
+        if (victoryUI != null) victoryUI.ShowVictory(currentLevelIndex);
+    }
+    // =========================================================
+    // 🔥 修复：无尽模式结算逻辑 (新公式版)
+    // =========================================================
+    public void OnEndlessModeGameOver()
+    {
+        _isLevelFinished = true;
+
+        // 1. 清理战场
+        ClearBattlefield();
+
+        // 2. 启动结算流程
+        StartCoroutine(DelayedEndlessOverProcess());
+    }
+
+    System.Collections.IEnumerator DelayedEndlessOverProcess()
+    {
+        // 稍等一秒，给玩家喘息时间
+        yield return new WaitForSecondsRealtime(1.0f);
+
+        // --- 📊 数据计算区域 ---
+
+        // 1. 获取基础数据
+        int killCount = currentScore; // 这里的 currentScore 实际上是击杀数 (AddScore(1) 加上去的)
+        int playTimeSeconds = Mathf.FloorToInt(_gameTime);
+
+        // 2. 🔥 应用新公式：分数 = 击杀数x100 + 时间(秒)x50
+        int finalScore = (killCount * 100) + (playTimeSeconds * 50);
+
+        Debug.Log($"💀 结算: 击杀{killCount} | 时间{playTimeSeconds}s | 总分{finalScore}");
+
+        // 3. 处理存档 (比对 FinalScore)
+        int bestScore = finalScore;
+        bool isNewRecord = false;
+
+        if (SaveManager.Instance != null)
+        {
+            // 尝试保存新的【总分】作为最高分
+            isNewRecord = SaveManager.Instance.TrySaveHighScore(finalScore);
+            bestScore = SaveManager.Instance.GetHighScore();
+        }
+
+        // 4. 发放金币 (可选：如果你想按分数发钱，比如 100分=1金币)
+        // int coins = Mathf.FloorToInt(finalScore / 100f);
+        // if (MoneyManager.Instance != null) MoneyManager.Instance.AddCoins(coins);
+
+        // --- 🖥️ UI 显示区域 ---
+
+        if (endScoreUI != null)
+        {
+            // 参数顺序：总分, 最高分, 新纪录?, 用时, 降妖数
+            endScoreUI.Show(finalScore, bestScore, isNewRecord, _gameTime, killCount);
+        }
+
+        if (LeaderboardSystem.Instance != null)
+        {
+            LeaderboardSystem.Instance.RefreshLeaderboard();
+        }
+    }
+
+    // =========================================================
+    // 刷怪辅助 (保持不变)
+    // =========================================================
     void UpdateSpawning()
     {
         if (waves.Count == 0 || EnemyAI.ActiveCount >= maxEnemyCount) return;
-
         _spawnTimer += Time.deltaTime;
         if (_spawnTimer >= waves[_currentWaveIndex].spawnInterval)
         {
@@ -264,79 +350,61 @@ public class EnemySpawner : MonoBehaviour
     void SpawnEnemy(EnemyWave wave)
     {
         if (wave.prefabs == null || wave.prefabs.Length == 0) return;
-        if (spawnPoints == null || spawnPoints.Length == 0) return;
+        Vector3 pos = GetBestSpawnPosition();
+        GameObject prefab = wave.prefabs[Random.Range(0, wave.prefabs.Length)];
 
-        Vector3 finalSpawnPos = GetBestSpawnPosition();
-        GameObject randomPrefab = wave.prefabs[Random.Range(0, wave.prefabs.Length)];
-
-        // 使用对象池生成
         if (PoolManager.Instance != null)
-            PoolManager.Instance.Spawn(randomPrefab, finalSpawnPos, Quaternion.identity);
+            PoolManager.Instance.Spawn(prefab, pos, Quaternion.identity);
         else
-            Instantiate(randomPrefab, finalSpawnPos, Quaternion.identity);
+            Instantiate(prefab, pos, Quaternion.identity);
     }
 
     Vector3 GetBestSpawnPosition()
     {
-        if (_playerTransform == null) return spawnPoints[Random.Range(0, spawnPoints.Length)].position;
+        if (_playerTransform == null && spawnPoints.Length > 0) return spawnPoints[0].position;
+        if (_playerTransform == null) return Vector3.zero;
 
-        // 简单的距离排序：选离玩家远的
         var sortedPoints = spawnPoints.OrderBy(p => Vector3.Distance(p.position, _playerTransform.position)).ToList();
-
-        int totalCount = sortedPoints.Count;
-        int startIndex = Mathf.FloorToInt(totalCount * 0.5f);
-        if (startIndex >= totalCount) startIndex = totalCount - 1;
-
-        int randomIndex = Random.Range(startIndex, totalCount);
-        Transform chosenPoint = sortedPoints[randomIndex];
+        int startIndex = Mathf.FloorToInt(sortedPoints.Count * 0.5f);
+        int randomIndex = Random.Range(startIndex, sortedPoints.Count);
 
         Vector3 offset = new Vector3(Random.Range(-0.5f, 0.5f), 0, Random.Range(-0.5f, 0.5f));
-        return chosenPoint.position + offset;
+        return sortedPoints[randomIndex].position + offset;
     }
 
-    // =========================================================
-    // 胜利逻辑 (已重构)
-    // =========================================================
-    void WinGame()
+    void FindSpawnPointsAndSetupPlayer(string mapNodeName)
     {
-        _isLevelFinished = true;
-        Debug.Log("🎉 关卡胜利！时间到达。");
-
-        // 1. 保存通关记录
-        if (SaveManager.Instance != null)
+        GameObject topRoot = GameObject.Find("EnemyCreatPoint");
+        if (topRoot == null)
         {
-            SaveManager.Instance.CompleteLevel(currentLevelIndex);
+            GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
+            if (existingPlayer) _playerTransform = existingPlayer.transform;
+            return;
+        }
+        Transform mapRoot = topRoot.transform.Find(mapNodeName);
+        if (mapRoot == null) { if (topRoot.transform.childCount > 0) mapRoot = topRoot.transform.GetChild(0); else return; }
+
+        Transform enemyContainer = mapRoot.Find("EnemyPoint");
+        if (enemyContainer != null)
+        {
+            spawnPoints = new Transform[enemyContainer.childCount];
+            for (int i = 0; i < enemyContainer.childCount; i++) spawnPoints[i] = enemyContainer.GetChild(i);
         }
 
-        // 2. 清理场上所有怪物
-        GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
-        foreach (var enemy in enemies)
+        Transform playerContainer = mapRoot.Find("PlayerPoint");
+        if (playerContainer != null && playerContainer.childCount > 0)
         {
-            if (PoolManager.Instance != null) PoolManager.Instance.Despawn(enemy);
-            else Destroy(enemy);
-        }
+            Transform startPoint = playerContainer.GetChild(0);
+            GameObject oldManager = GameObject.Find("PlayerManager");
+            if (oldManager != null) Destroy(oldManager);
 
-        // 3. 🔥 调用 VictoryUI 显示界面 (核心修改)
-        if (victoryUI != null)
-        {
-            victoryUI.ShowVictory(currentLevelIndex);
-        }
-        else
-        {
-            Debug.LogError("❌ EnemySpawner: 找不到 VictoryUI 引用，无法弹出胜利界面！");
-            // 最后的保底，防止卡死
-            Time.timeScale = 0f;
-        }
-    }
-
-    void OnDrawGizmos()
-    {
-        if (spawnPoints != null)
-        {
-            Gizmos.color = Color.green;
-            foreach (var point in spawnPoints)
+            if (playerManagerPrefab != null)
             {
-                if (point != null) Gizmos.DrawWireSphere(point.position, 0.5f);
+                GameObject newManager = Instantiate(playerManagerPrefab, startPoint.position, Quaternion.identity);
+                newManager.name = "PlayerManager";
+                Transform realPlayer = newManager.transform.Find("Player");
+                if (realPlayer != null) _playerTransform = realPlayer;
+                else foreach (Transform child in newManager.transform) if (child.CompareTag("Player")) { _playerTransform = child; break; }
             }
         }
     }

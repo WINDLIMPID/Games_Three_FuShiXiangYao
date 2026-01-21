@@ -44,6 +44,11 @@ public class EnemyAI : MonoBehaviour, IPoolObject
         var col = GetComponent<Collider>();
         if (col) col.enabled = true;
 
+        if (animator == null)
+        {
+            animator = GetComponentInChildren<Animator>();
+        }
+
         // 2. 动画重置
         if (animator)
         {
@@ -274,7 +279,11 @@ public class EnemyAI : MonoBehaviour, IPoolObject
         {
             animator.SetTrigger("Die");
         }
-
+        // 🔥 1. 加分
+        if (EnemySpawner.Instance != null)
+        {
+            EnemySpawner.Instance.AddScore(1);
+        }
         // 掉落经验球
         if (expGemPrefab)
         {

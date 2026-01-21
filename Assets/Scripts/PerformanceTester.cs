@@ -40,7 +40,7 @@ public class PerformanceTester : MonoBehaviour
             _dt = 0;
 
             // 看看现在实际跑多少，如果稳在 59-60 就是完美的
-            Debug.Log($"<color=yellow>FPS: {_fps:F1}</color> | <color=red>Active Enemies: {EnemyAI.ActiveCount}</color>");
+            //Debug.Log($"<color=yellow>FPS: {_fps:F1}</color> | <color=red>Active Enemies: {EnemyAI.ActiveCount}</color>");
         }
     }
 }

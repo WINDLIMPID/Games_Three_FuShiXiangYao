@@ -50,7 +50,7 @@ public class UpgradeManager : MonoBehaviour
         }
     }
 
-    // 🔥🔥🔥 修改：按 50% 最大血量回血 🔥🔥🔥
+    // 按 50% 最大血量回血
     private void HealPlayerOnMaxLevel()
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
@@ -71,6 +71,10 @@ public class UpgradeManager : MonoBehaviour
                     AudioManager.Instance.PlaySFX("LevelUp");
             }
         }
+
+        // 即使满级回血，也可以恢复游戏时间
+        levelUpPanel.SetActive(false);
+        Time.timeScale = 1;
     }
 
     private void RefreshSkillOptions()
@@ -112,19 +116,26 @@ public class UpgradeManager : MonoBehaviour
     public void ApplySkillEffect(SkillDefinition skill)
     {
         GameObject player = GameObject.FindGameObjectWithTag("Player");
-        TalismanOrbit orbit = player.GetComponent<TalismanOrbit>();
-        PlayerController pc = player.GetComponent<PlayerController>();
-        Health hp = player.GetComponent<Health>();
 
-        float valA = skill.levels[skill.currentLevel - 1].valueA;
+        // 获取可能用到的组件
+        TalismanOrbit orbit = player != null ? player.GetComponent<TalismanOrbit>() : null;
+        PlayerController pc = player != null ? player.GetComponent<PlayerController>() : null;
+        Health hp = player != null ? player.GetComponent<Health>() : null;
 
+        // 获取当前等级的数值参数 (注意：currentLevel 已经 +1 了，所以这里取 level-1)
+        float valA = 0;
+        if (skill.levels != null && skill.currentLevel > 0 && skill.currentLevel <= skill.levels.Count)
+        {
+            valA = skill.levels[skill.currentLevel - 1].valueA;
+        }
+
+        // 应用技能效果
         switch (skill.skillID)
         {
-            case 101: orbit.count += (int)valA; break;
-            case 102: orbit.rotateSpeed += valA; break;
-            case 103: orbit.radius += valA; orbit.RebuildFormation(); break;
+            case 101: if (orbit) orbit.count += (int)valA; break;
+            case 102: if (orbit) orbit.rotateSpeed += valA; break;
+            case 103: if (orbit) { orbit.radius += valA; orbit.RebuildFormation(); } break;
 
-            // ✅ 确保这里是 orbit.AddDamage，而不是 Debug.Log
             case 104:
                 if (orbit != null) orbit.AddDamage((int)valA);
                 break;
@@ -134,6 +145,18 @@ public class UpgradeManager : MonoBehaviour
             case 107: if (pc) pc.expMultiplier += valA; break;
         }
 
+        // 🔥🔥🔥 【核心修改】通知 UI 更新图标和等级 🔥🔥🔥
+        if (UI_HUD_SkillManager.Instance != null)
+        {
+            UI_HUD_SkillManager.Instance.UpdateSkillDisplay(skill);
+        }
+        else
+        {
+            // 防呆提示：如果你还没挂那个脚本，会报这个警告
+            // Debug.LogWarning("场景中找不到 UI_HUD_SkillManager，技能图标无法更新。");
+        }
+
+        // 关闭弹窗，恢复游戏
         levelUpPanel.SetActive(false);
         Time.timeScale = 1;
     }

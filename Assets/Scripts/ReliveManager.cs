@@ -86,9 +86,18 @@ public class ReliveManager : MonoBehaviour
         // 关闭复活界面
         if (relivePanel != null) relivePanel.SetActive(false);
 
-        // 打开真正的失败界面
-        if (failPanel != null) failPanel.SetActive(true);
-
+     
+        // 2. 🔥 核心修改：判断是“无尽模式”还是“普通模式”
+        if (EnemySpawner.Instance != null && EnemySpawner.Instance.IsEndlessMode)
+        {
+            // 如果是无尽模式 -> 呼叫无尽结算面板
+            EnemySpawner.Instance.OnEndlessModeGameOver();
+        }
+        else
+        {
+            // 打开真正的失败界面
+            if (failPanel != null) failPanel.SetActive(true);
+        }
         Debug.Log("💀 玩家放弃复活，进入结算...");
     }
 }

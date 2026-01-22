@@ -22,7 +22,7 @@ public class UI_RealNamePanel : MonoBehaviour
         // 基础格式校验
         if (n.Length < 2 || (id.Length != 15 && id.Length != 18))
         {
-            statusText.text = "<color=red>请输入有效的姓名和身份证号</color>";
+            statusText.text = "请输入有效的姓名和身份证号";
             return;
         }
 
@@ -37,7 +37,7 @@ public class UI_RealNamePanel : MonoBehaviour
         if (string.IsNullOrEmpty(currentUsername))
         {
             Debug.LogError("❌ 警告：未获取到当前账号名！");
-            statusText.text = "<color=red>账号状态异常，请重新登录</color>";
+            statusText.text = "账号状态异常，请重新登录";
             return;
         }
 
@@ -51,14 +51,14 @@ public class UI_RealNamePanel : MonoBehaviour
             submitBtn.interactable = true;
             if (success)
             {
-                statusText.text = "<color=green>认证成功！</color>";
+                statusText.text = "认证成功！";
 
                 // 成功后1秒关闭界面
                 Invoke("ClosePanel", 1.0f);
             }
             else
             {
-                statusText.text = "<color=red>认证失败，信息不匹配</color>";
+                statusText.text = "认证失败，信息不匹配";
             }
         });
     }

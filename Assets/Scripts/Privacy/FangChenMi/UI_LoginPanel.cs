@@ -67,8 +67,8 @@ public class UI_LoginPanel : SimpleWindowUI
         string u = usernameInput.text.Trim();
         string p = passwordInput.text.Trim();
 
-        if (string.IsNullOrEmpty(u)) { statusText.text = "<color=red>请输入账号</color>"; return; }
-        if (string.IsNullOrEmpty(p)) { statusText.text = "<color=red>请输入密码</color>"; return; }
+        if (string.IsNullOrEmpty(u)) { statusText.text = "请输入账号"; return; }
+        if (string.IsNullOrEmpty(p)) { statusText.text = "请输入密码"; return; }
 
         loginBtn.interactable = false;
         statusText.text = "正在登录...";
@@ -77,15 +77,15 @@ public class UI_LoginPanel : SimpleWindowUI
             loginBtn.interactable = true;
             if (success)
             {
-                statusText.text = "<color=green>登录成功！</color>";
+                statusText.text = "登录成功！";
                 Hide();
             }
             else
             {
                 if (msg.Contains("不存在") || msg.Contains("密码错误"))
-                    statusText.text = "<color=red>账号或密码错误</color>";
+                    statusText.text = "账号或密码错误";
                 else
-                    statusText.text = $"<color=red>{msg}</color>";
+                    statusText.text = msg.ToString();
             }
         });
     }

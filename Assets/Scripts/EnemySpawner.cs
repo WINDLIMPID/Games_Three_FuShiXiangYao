@@ -76,7 +76,7 @@ public class EnemySpawner : MonoBehaviour
         if (scoreText != null)
         {
             scoreText.gameObject.SetActive(IsEndlessMode);
-            if (IsEndlessMode) scoreText.text = "击杀: 0";
+            if (IsEndlessMode) scoreText.text = "降妖：0";
         }
 
         FindSpawnPointsAndSetupPlayer(targetMapName);
@@ -95,7 +95,7 @@ public class EnemySpawner : MonoBehaviour
         if (IsEndlessMode)
         {
             currentScore += amount;
-            if (scoreText != null) scoreText.text = "击杀: " + currentScore;
+            if (scoreText != null) scoreText.text = "降妖：" + currentScore;
         }
     }
 
@@ -226,7 +226,7 @@ public class EnemySpawner : MonoBehaviour
         {
             int m = Mathf.FloorToInt(_gameTime / 60F);
             int s = Mathf.FloorToInt(_gameTime % 60F);
-            timerText.text = $"<color=#FFD700>∞ {m:00}:{s:00}</color>";
+            timerText.text = $"∞ {m:00}:{s:00}";
             timerText.transform.localScale = Vector3.one;
         }
         else

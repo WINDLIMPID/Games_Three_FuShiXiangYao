@@ -34,8 +34,6 @@ public class MainMenu : MonoBehaviour
             AudioManager.Instance.PlayMusic("UIBGM");
         }
 
-
-
         // 2. 检查登录状态
         CheckLoginStatus();
 
@@ -50,9 +48,9 @@ public class MainMenu : MonoBehaviour
             else
             {
                 // 否则显示主界面 (重置状态)
-                  StartMainUI(true);
-                  StartRoleUI(false);
-                  StartChooseLevel(false);
+                StartMainUI(true);
+                StartRoleUI(false);
+                StartChooseLevel(false);
             }
         }
     }
@@ -87,45 +85,14 @@ public class MainMenu : MonoBehaviour
         }
     }
 
-    // 🔥🔥🔥 核心逻辑：决定是播漫画还是显示主界面
+    // =========================================================
+    // 🔥 修改点 1：移除开场播放逻辑，直接进主界面
+    // =========================================================
     public void InitGameFlow()
     {
-        // 检查是否看过漫画 (0=没看过, 1=看过)
-        bool hasWatched = PlayerPrefs.GetInt(PREF_STORY_WATCHED, 0) == 1;
-
-        if (!hasWatched)
-        {
-            // === 情况 A: 第一次进入 ===
-            // 隐藏主界面
-            StartMainUI(false);
-            StartRoleUI(false);
-
-            // 播放漫画
-            if (storyPlayer != null)
-            {
-                storyPlayer.PlayStory(() => {
-                    // 漫画播完的回调：
-                    Debug.Log("漫画播放完毕，正式进入游戏");
-
-                    // 1. 记录已看过
-                    PlayerPrefs.SetInt(PREF_STORY_WATCHED, 1);
-                    PlayerPrefs.Save();
-
-                    // 2. 显示主界面
-                    ShowNormalUI();
-                });
-            }
-            else
-            {
-                // 如果忘了拖脚本，直接进
-                ShowNormalUI();
-            }
-        }
-        else
-        {
-            // === 情况 B: 老玩家，直接显示主界面 ===
-            ShowNormalUI();
-        }
+        // 旧逻辑已删除，不再这里判断是否看过漫画
+        // 直接显示正常的主界面
+        ShowNormalUI();
     }
 
     // 显示正常的主界面逻辑
@@ -278,8 +245,6 @@ public class MainMenu : MonoBehaviour
             GlobalConfig.Instance.isLevelSelectionOpen = _isOpen;
         }
         if (mainUI != null) mainUI.SetActive(_isOpen);
-
-
     }
 
     public void StartChooseLevel(bool _isOpen)
@@ -291,14 +256,41 @@ public class MainMenu : MonoBehaviour
         }
 
         if (chooseLevelUI != null) chooseLevelUI.SetActive(_isOpen);
-
     }
 
+    // =========================================================
+    // 🔥 修改点 2：在打开角色界面时判断是否播放漫画
+    // =========================================================
     public void StartRoleUI(bool _isOpen)
     {
-            
-        if (roleUI != null) roleUI.SetActive(_isOpen);
+        // 如果是“打开”操作，且剧情播放器存在
+        if (_isOpen && storyPlayer != null)
+        {
+            // 检查是否看过漫画 (0=没看过, 1=看过)
+            bool hasWatched = PlayerPrefs.GetInt(PREF_STORY_WATCHED, 0) == 1;
 
+            if (!hasWatched)
+            {
+                // === 第一次进入 ===
+                // 1. 播放漫画，并传入“播完后要做的事”
+                storyPlayer.PlayStory(() => {
+                    Debug.Log("首次角色界面触发：漫画播放完毕");
+
+                    // 2. 标记已看过
+                    PlayerPrefs.SetInt(PREF_STORY_WATCHED, 1);
+                    PlayerPrefs.Save();
+
+                    // 3. 真正打开角色界面
+                    if (roleUI != null) roleUI.SetActive(true);
+                });
+
+                // ⚠️ 这里直接返回，不执行下面的 SetActive，等待漫画播完的回调去执行
+                return;
+            }
+        }
+
+        // === 正常逻辑 (关闭界面，或已经是老玩家) ===
+        if (roleUI != null) roleUI.SetActive(_isOpen);
     }
 
     public void QuitGame()

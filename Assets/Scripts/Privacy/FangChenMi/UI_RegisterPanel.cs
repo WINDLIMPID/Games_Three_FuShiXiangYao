@@ -48,9 +48,9 @@ public class UI_RegisterPanel : SimpleWindowUI
         string cp = confirmPassInput.text.Trim();
 
         // 🔥 本地校验 + 简短提示
-        if (u.Length < 4 || u.Length > 20) { statusText.text = "<color=red>账号限4-20位</color>"; return; }
-        if (p.Length < 8 || p.Length > 16) { statusText.text = "<color=red>密码限8-16位</color>"; return; }
-        if (p != cp) { statusText.text = "<color=red>两次密码不一致</color>"; return; }
+        if (u.Length < 4 || u.Length > 20) { statusText.text = "账号限4-20位"; return; }
+        if (p.Length < 8 || p.Length > 16) { statusText.text = "密码限8-16位"; return; }
+        if (p != cp) { statusText.text = "两次密码不一致"; return; }
 
         submitBtn.interactable = false;
         statusText.text = "正在提交...";
@@ -68,13 +68,13 @@ public class UI_RegisterPanel : SimpleWindowUI
                     this.Hide();
 
                     if (loginPanel.statusText)
-                        loginPanel.statusText.text = "<color=green>注册成功，请登录</color>";
+                        loginPanel.statusText.text = "注册成功，请登录";
                 }
             }
             else
             {
-                if (msg.Contains("已存在")) statusText.text = "<color=red>账号已存在</color>";
-                else statusText.text = $"<color=red>{msg}</color>";
+                if (msg.Contains("已存在")) statusText.text = "账号已存在";
+                else statusText.text = msg.ToString();
             }
         });
     }

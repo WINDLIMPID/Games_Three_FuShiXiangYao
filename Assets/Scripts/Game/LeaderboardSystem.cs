@@ -13,7 +13,24 @@ public class RankItemData
 
 public class LeaderboardSystem : MonoBehaviour
 {
-    public static LeaderboardSystem Instance;
+    private static LeaderboardSystem instance;
+
+    public static LeaderboardSystem Instance
+    {
+        get
+        {
+            if (instance == null)
+            {
+                instance = FindFirstObjectByType<LeaderboardSystem>();
+            }
+            /*
+            if (instance == null)
+            {
+                instance = new GameObject().AddComponent<LeaderboardSystem>();
+            }*/
+            return instance;
+        }
+    }
 
     private List<RankItemData> _cachedData;
 
@@ -26,10 +43,6 @@ public class LeaderboardSystem : MonoBehaviour
         "北凉徐凤年", "韩跑跑", "李淳罡", "王仙芝", "曹长卿"
     };
 
-    void Awake()
-    {
-        Instance = this;
-    }
 
     void Start()
     {

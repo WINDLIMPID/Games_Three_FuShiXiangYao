@@ -229,10 +229,16 @@ public class EnemyAI : MonoBehaviour, IPoolObject
         else
         {
             _rb.velocity = Vector3.zero;
-            // 攻击时保持面向玩家
-            Vector3 lookDir = _player.position - transform.position;
-            lookDir.y = 0;
-            if (lookDir != Vector3.zero) transform.forward = lookDir;
+            float dis = Vector3.Distance(_player.position, transform.position);
+
+            if (dis >= attackRange)
+            {
+                // 攻击时保持面向玩家
+                Vector3 lookDir = _player.position - transform.position;
+                lookDir.y = 0;
+                if (lookDir != Vector3.zero) transform.forward = lookDir;
+            }
+          
         }
     }
 

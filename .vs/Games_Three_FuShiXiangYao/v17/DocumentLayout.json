@@ -1,0 +1,166 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\mainui\\mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\mainui\\mainmenu.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|c:\\project_iaa\\games_three_fushixiangyao\\assets\\scripts\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemyai.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\game\\leaderboardsystem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\game\\leaderboardsystem.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\enemyspawner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\enemyspawner.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\game\\ui_leaderboard.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\game\\ui_leaderboard.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\privacy\\fangchenmi\\ui_realnamepanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\privacy\\fangchenmi\\ui_realnamepanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\privacy\\fangchenmi\\ui_loginpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\privacy\\fangchenmi\\ui_loginpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\privacy\\fangchenmi\\ui_registerpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\privacy\\fangchenmi\\ui_registerpanel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|C:\\Project_IAA\\Games_Three_FuShiXiangYao\\assets\\scripts\\levelchoose\\levelmenumanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{391EDA49-8817-153D-4247-D4929B913C13}|Assembly-CSharp.csproj|solutionrelative:assets\\scripts\\levelchoose\\levelmenumanager.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 4,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "EnemyAI.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\EnemyAI.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\EnemyAI.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\EnemyAI.cs",
+              "RelativeToolTip": "Assets\\Scripts\\EnemyAI.cs",
+              "ViewState": "AgIAANgAAAAAAAAAAAASwO4AAABJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T19:44:56.442Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "LeaderboardSystem.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Game\\LeaderboardSystem.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Game\\LeaderboardSystem.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Game\\LeaderboardSystem.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Game\\LeaderboardSystem.cs",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAxwBEAAAAsAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T19:34:43.651Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UI_Leaderboard.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Game\\UI_Leaderboard.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Game\\UI_Leaderboard.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Game\\UI_Leaderboard.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Game\\UI_Leaderboard.cs",
+              "ViewState": "AgIAACsAAAAAAAAAAAAowDgAAABEAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T19:32:00.349Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "EnemySpawner.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\EnemySpawner.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\EnemySpawner.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\EnemySpawner.cs",
+              "RelativeToolTip": "Assets\\Scripts\\EnemySpawner.cs",
+              "ViewState": "AgIAADsBAAAAAAAAAAAqwEkBAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T19:24:54.674Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "MainMenu.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\MainUI\\MainMenu.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\MainUI\\MainMenu.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\MainUI\\MainMenu.cs",
+              "RelativeToolTip": "Assets\\Scripts\\MainUI\\MainMenu.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAACwBAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T19:20:03.328Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "UI_RealNamePanel.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_RealNamePanel.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_RealNamePanel.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_RealNamePanel.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_RealNamePanel.cs",
+              "ViewState": "AgIAADAAAAAAAAAAAAAlwDwAAAAtAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T18:37:48.117Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "UI_RegisterPanel.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_RegisterPanel.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_RegisterPanel.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_RegisterPanel.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_RegisterPanel.cs",
+              "ViewState": "AgIAADgAAAAAAAAAAAAlwEwAAAAqAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T18:29:59.66Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "UI_LoginPanel.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_LoginPanel.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_LoginPanel.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\Privacy\\FangChenMi\\UI_LoginPanel.cs",
+              "RelativeToolTip": "Assets\\Scripts\\Privacy\\FangChenMi\\UI_LoginPanel.cs",
+              "ViewState": "AgIAAD4AAAAAAAAAAAAjwE8AAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T18:28:47.96Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "LevelMenuManager.cs",
+              "DocumentMoniker": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\LevelChoose\\LevelMenuManager.cs",
+              "RelativeDocumentMoniker": "Assets\\Scripts\\LevelChoose\\LevelMenuManager.cs",
+              "ToolTip": "C:\\Project_IAA\\Games_Three_FuShiXiangYao\\Assets\\Scripts\\LevelChoose\\LevelMenuManager.cs",
+              "RelativeToolTip": "Assets\\Scripts\\LevelChoose\\LevelMenuManager.cs",
+              "ViewState": "AgIAAFgAAAAAAAAAAAAUwF0AAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-01-21T17:08:46.258Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -78,14 +78,32 @@ public class UI_LoginPanel : SimpleWindowUI
             if (success)
             {
                 statusText.text = "登录成功！";
+
                 Hide();
+
+                // 🔥🔥🔥 加上这一行！初始化防沉迷数据 🔥🔥🔥
+                if (AntiAddictionManager.Instance != null)
+                {
+                    AntiAddictionManager.Instance.InitData(usernameInput.text);
+                }
+
             }
             else
             {
-                if (msg.Contains("不存在") || msg.Contains("密码错误"))
+                // 🔥 修改：只有短消息（如密码错误）才显示在面板上
+                // 如果消息很长（包含换行），说明是防沉迷提示，直接清空面板文字
+                if (msg.Length > 15 || msg.Contains("\n"))
+                {
+                    statusText.text = "";
+                }
+                else if (msg.Contains("不存在") || msg.Contains("密码错误"))
+                {
                     statusText.text = "账号或密码错误";
+                }
                 else
-                    statusText.text = msg.ToString();
+                {
+                    statusText.text = msg;
+                }
             }
         });
     }

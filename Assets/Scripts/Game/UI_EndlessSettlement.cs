@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using DG.Tweening;
@@ -6,36 +6,24 @@ using UnityEngine.SceneManagement;
 
 public class UI_EndlessSettlement : SimpleWindowUI
 {
-    [Header("=== ÎÄ±¾×é¼ş (Çë°´Ë³ĞòÍÏÈë) ===")]
-    public TextMeshProUGUI currentScoreText; // µÚÒ»ĞĞ£ºÏÔÊ¾¼ÆËãºóµÄ¡¾×Ü·Ö¡¿
-    public TextMeshProUGUI bestScoreText;    // µÚ¶şĞĞ£ºÏÔÊ¾¡¾×î¸ß·Ö¡¿
-    public TextMeshProUGUI killCountText;    // µÚÈıĞĞ£ºÏÔÊ¾¡¾½µÑıÊı¡¿(Ô­ rewardText)
-    public TextMeshProUGUI timeText;         // µÚËÄĞĞ£ºÏÔÊ¾¡¾ÓÃÊ±¡¿
+    [Header("=== æ–‡æœ¬ç»„ä»¶ ===")]
+    public TextMeshProUGUI currentScoreText;
+    public TextMeshProUGUI bestScoreText;
+    public TextMeshProUGUI killCountText;
+    public TextMeshProUGUI timeText;
 
-    [Header("=== ÊÓ¾õ×é¼ş ===")]
-    public GameObject newRecordBadge;        // ĞÂ¼ÍÂ¼Ó¡ÕÂ
+    [Header("=== è§†è§‰ç»„ä»¶ ===")]
+    public GameObject newRecordBadge;
 
-    [Header("=== °´Å¥ ===")]
+    [Header("=== æŒ‰é’® ===")]
     public Button homeButton;
 
-    /// <summary>
-    /// ÏÔÊ¾½áËãÃæ°å
-    /// </summary>
-    /// <param name="finalScore">¼ÆËãºóµÄ×Ü·Ö</param>
-    /// <param name="bestScore">ÀúÊ·×î¸ß·Ö</param>
-    /// <param name="isNewRecord">ÊÇ·ñĞÂ¼ÍÂ¼</param>
-    /// <param name="secondsPlayed">Éú´æÊ±¼ä(Ãë)</param>
-    /// <param name="killCount">»÷É±ÊıÁ¿</param>
     public void Show(int finalScore, int bestScore, bool isNewRecord, float secondsPlayed, int killCount)
     {
-        // 1. ÉèÖÃÎÄ±¾
         if (currentScoreText) currentScoreText.text = finalScore.ToString();
         if (bestScoreText) bestScoreText.text = bestScore.ToString();
-
-        // µÚÈıĞĞÏÔÊ¾½µÑıÊı (»÷É±Êı)
         if (killCountText) killCountText.text = killCount.ToString();
 
-        // ¸ñÊ½»¯Ê±¼ä
         if (timeText)
         {
             int m = Mathf.FloorToInt(secondsPlayed / 60F);
@@ -43,17 +31,13 @@ public class UI_EndlessSettlement : SimpleWindowUI
             timeText.text = string.Format("{0:00}:{1:00}", m, s);
         }
 
-        // 2. ĞÂ¼ÍÂ¼ÏÔÊ¾
         if (newRecordBadge) newRecordBadge.SetActive(isNewRecord);
 
-        // 3. ÒôĞ§
         if (isNewRecord && AudioManager.Instance)
             AudioManager.Instance.PlaySFX("Win");
 
-        // 4. ÏÔÊ¾µ¯´°
         base.Show();
 
-        // 5. ·ÖÊı¹ö¶¯¶¯»­
         if (currentScoreText)
         {
             int tempScore = 0;
@@ -70,6 +54,7 @@ public class UI_EndlessSettlement : SimpleWindowUI
             homeButton.onClick.RemoveAllListeners();
             homeButton.onClick.AddListener(() => {
                 Time.timeScale = 1f;
+                // ğŸ”¥ğŸ”¥ğŸ”¥ æ ¸å¿ƒä¿®æ”¹ï¼šæ”¹ç”¨ SceneController ğŸ”¥ğŸ”¥ğŸ”¥
                 if (SceneController.Instance) SceneController.Instance.LoadMainMenu();
                 else SceneManager.LoadScene("MainMenuScene");
             });

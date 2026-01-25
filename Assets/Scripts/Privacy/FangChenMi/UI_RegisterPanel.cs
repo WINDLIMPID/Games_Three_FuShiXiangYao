@@ -5,7 +5,7 @@ using UnityEngine.UI;
 public class UI_RegisterPanel : SimpleWindowUI
 {
     [Header("=== 引用：登录界面 ===")]
-    public UI_LoginPanel loginPanel; // 需拖入 LoginPanel
+    public UI_LoginPanel loginPanel;
 
     [Header("=== 注册输入 ===")]
     public TMP_InputField usernameInput;
@@ -28,7 +28,6 @@ public class UI_RegisterPanel : SimpleWindowUI
     public override void Show()
     {
         base.Show();
-        // 清空输入框
         if (usernameInput) usernameInput.text = "";
         if (passwordInput) passwordInput.text = "";
         if (confirmPassInput) confirmPassInput.text = "";
@@ -37,8 +36,8 @@ public class UI_RegisterPanel : SimpleWindowUI
 
     void OnBackClicked()
     {
-        Hide(); // 关闭注册
-        if (loginPanel != null) loginPanel.Show(); // 返回登录
+        Hide();
+        if (loginPanel != null) loginPanel.Show();
     }
 
     void OnSubmitClicked()
@@ -47,7 +46,16 @@ public class UI_RegisterPanel : SimpleWindowUI
         string p = passwordInput.text.Trim();
         string cp = confirmPassInput.text.Trim();
 
-        // 🔥 本地校验 + 简短提示
+        // 🔥🔥🔥 核心修改：使用新的 ComplianceDataManager 检查屏蔽词 🔥🔥🔥
+        if (ComplianceDataManager.Instance != null)
+        {
+            if (ComplianceDataManager.Instance.ContainsSensitiveWord(u))
+            {
+                if (statusText) statusText.text = "用户名包含违规词汇，请修改";
+                return;
+            }
+        }
+
         if (u.Length < 4 || u.Length > 20) { statusText.text = "账号限4-20位"; return; }
         if (p.Length < 8 || p.Length > 16) { statusText.text = "密码限8-16位"; return; }
         if (p != cp) { statusText.text = "两次密码不一致"; return; }
@@ -56,19 +64,16 @@ public class UI_RegisterPanel : SimpleWindowUI
         statusText.text = "正在提交...";
 
         AccountManager.Instance.Register(u, p, (success, msg) => {
-            submitBtn.interactable = true;
+            if (submitBtn) submitBtn.interactable = true;
             if (success)
             {
-                // 注册成功，切回登录界面
                 if (loginPanel != null)
                 {
-                    loginPanel.usernameInput.text = u; // 填账号
-                    loginPanel.passwordInput.text = ""; // 🔥 密码留空，强迫玩家记忆
+                    loginPanel.usernameInput.text = u;
+                    loginPanel.passwordInput.text = "";
                     loginPanel.Show();
                     this.Hide();
-
-                    if (loginPanel.statusText)
-                        loginPanel.statusText.text = "注册成功，请登录";
+                    if (loginPanel.statusText) loginPanel.statusText.text = "注册成功，请登录";
                 }
             }
             else

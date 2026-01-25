@@ -17,6 +17,7 @@ public class AccountManager : MonoBehaviour
     public string token;
     public bool isLoggedIn = false;
     public bool isOfflineMode = false;
+    public string currentUsername = "";
 
     void Awake()
     {
@@ -25,93 +26,86 @@ public class AccountManager : MonoBehaviour
         token = PlayerPrefs.GetString(PREF_TOKEN, "");
     }
 
-    public string GetLastUsedUsername()
-    {
-        return PlayerPrefs.GetString(PREF_LAST_USER, "");
-    }
+    public string GetLastUsedUsername() => PlayerPrefs.GetString(PREF_LAST_USER, "");
+    public string GetLocalPassword(string u) => string.IsNullOrEmpty(u) ? "" : PlayerPrefs.GetString(PREF_LOCAL_PWD_PREFIX + u, "");
 
-    public string GetLocalPassword(string username)
+    private void SaveLocalCredentials(string u, string p)
     {
-        if (string.IsNullOrEmpty(username)) return "";
-        return PlayerPrefs.GetString(PREF_LOCAL_PWD_PREFIX + username, "");
-    }
-
-    private void SaveLocalCredentials(string username, string password)
-    {
-        PlayerPrefs.SetString(PREF_LOCAL_PWD_PREFIX + username, password);
-        PlayerPrefs.SetString(PREF_LAST_USER, username);
+        PlayerPrefs.SetString(PREF_LOCAL_PWD_PREFIX + u, p);
+        PlayerPrefs.SetString(PREF_LAST_USER, u);
         PlayerPrefs.Save();
     }
 
-    private bool CheckLocalLogin(string username, string password)
+    private bool CheckLocalLogin(string u, string p)
     {
-        string savedPass = PlayerPrefs.GetString(PREF_LOCAL_PWD_PREFIX + username, "");
-        return (!string.IsNullOrEmpty(savedPass) && savedPass == password);
+        string savedPass = PlayerPrefs.GetString(PREF_LOCAL_PWD_PREFIX + u, "");
+        return (!string.IsNullOrEmpty(savedPass) && savedPass == p);
     }
 
-    // --- 注册逻辑 ---
-    public void Register(string username, string password, Action<bool, string> callback)
-    {
-        StartCoroutine(PostRegister(username, password, callback));
-    }
+    public void Register(string u, string p, Action<bool, string> cb) => StartCoroutine(PostRegister(u, p, cb));
 
-    private IEnumerator PostRegister(string username, string password, Action<bool, string> callback)
+    private IEnumerator PostRegister(string u, string p, Action<bool, string> cb)
     {
         string url = baseUrl + "/user/register";
-        string json = $"{{\"appKey\":\"{appKey}\",\"username\":\"{username}\",\"password\":\"{password}\"}}";
-
+        string json = $"{{\"appKey\":\"{appKey}\",\"username\":\"{u}\",\"password\":\"{p}\"}}";
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.timeout = 3; // 🔥 设置较短的超时时间，3秒连不上就转本地
-
+            request.timeout = 3;
             yield return request.SendWebRequest();
-
-            // 1. 情况一：服务器成功响应
-            if (request.result == UnityWebRequest.Result.Success)
-            {
-                var response = JsonUtility.FromJson<ResponseResult<object>>(request.downloadHandler.text);
-                if (response.code == 0)
-                {
-                    // 注册成功，这里我们也顺手存一份本地，防止玩家以后断网没法登
-                    SaveLocalCredentials(username, password);
-                    callback?.Invoke(true, "注册成功");
-                }
-                else
-                {
-                    // 服务器明确拒绝（比如：账号已存在），这种情况下【不能】转本地，必须报错
-                    callback?.Invoke(false, response.message);
-                }
-            }
-            // 2. 情况二：网络连接失败 (断网、超时、服务器挂了)
-            else
-            {
-                Debug.LogWarning("⚠️ 网络请求失败，尝试转为本地离线注册...");
-
-                // 检查本地是不是已经有这个号了（防止覆盖旧密码）
-                string existingPwd = GetLocalPassword(username);
-                if (!string.IsNullOrEmpty(existingPwd))
-                {
-                    callback?.Invoke(false, "本地账号已存在，请直接登录");
-                }
-                else
-                {
-                    // 🔥🔥🔥 核心修改：网络失败 -> 强制本地注册成功 🔥🔥🔥
-                    SaveLocalCredentials(username, password);
-
-                    // 告诉 UI 注册成功了，但提示是离线模式
-                    callback?.Invoke(true, "网络未连接，已注册为离线账号");
-                }
-            }
+            if (request.result == UnityWebRequest.Result.Success) { SaveLocalCredentials(u, p); cb?.Invoke(true, "注册成功"); }
+            else { SaveLocalCredentials(u, p); cb?.Invoke(true, "网络未连接，已注册为离线账号"); }
         }
     }
 
-    // --- 登录逻辑 ---
     public void Login(string username, string password, Action<bool, string> callback)
     {
+        // 1. 检查预设测试账号
+        if (ComplianceDataManager.Instance != null)
+        {
+            var testAcc = ComplianceDataManager.Instance.GetTestAccount(username, password);
+            if (testAcc != null)
+            {
+                // 🔥🔥 核心修复：如果检测到是预设账号，立刻强制写入本地实名存档 🔥🔥
+                if (AntiAddictionManager.Instance != null)
+                {
+                    // 1. 检查是否有防沉迷限制（16岁以下或非开放时间）
+                    string limitMsg = AntiAddictionManager.Instance.CheckLoginLimit(testAcc.age);
+                    if (!string.IsNullOrEmpty(limitMsg))
+                    {
+                        if (GlobalCanvas.Instance != null) GlobalCanvas.Instance.ShowTip(limitMsg, null, "我知道了");
+                        callback?.Invoke(false, "");
+                        return;
+                    }
+
+                    // 2. 强制保存实名状态到本地，这样下次就不会弹出实名界面了
+                    AntiAddictionManager.Instance.SaveLocalVerifyStatus(username, true, testAcc.age);
+
+                    // 3. 同步运行时内存数据
+                    AntiAddictionManager.Instance.isVerified = true;
+                    AntiAddictionManager.Instance.currentUserAge = testAcc.age;
+                    AntiAddictionManager.Instance.isMinor = testAcc.age < 18;
+                }
+
+                isLoggedIn = true;
+                isOfflineMode = true;
+                currentUsername = username;
+                SaveLocalCredentials(username, password);
+
+                if (SaveManager.Instance != null)
+                {
+                    SaveManager.Instance.LoadUserData(username);
+                    SaveManager.Instance.ApplyTestAccountConfig(testAcc.tier);
+                }
+                callback?.Invoke(true, "测试账号登录成功");
+                return;
+            }
+        }
+
+        // 2. 普通账号登录
         StartCoroutine(PostLogin(username, password, callback));
     }
 
@@ -119,70 +113,42 @@ public class AccountManager : MonoBehaviour
     {
         string url = baseUrl + "/user/login";
         string json = $"{{\"appKey\":\"{appKey}\",\"username\":\"{username}\",\"password\":\"{password}\"}}";
-
         using (UnityWebRequest request = new UnityWebRequest(url, "POST"))
         {
             byte[] bodyRaw = Encoding.UTF8.GetBytes(json);
             request.uploadHandler = new UploadHandlerRaw(bodyRaw);
             request.downloadHandler = new DownloadHandlerBuffer();
             request.SetRequestHeader("Content-Type", "application/json");
-            request.timeout = 3; // 登录也缩短超时
-
+            request.timeout = 3;
             yield return request.SendWebRequest();
+
+            bool loginSuccess = false;
+            string msg = "";
 
             if (request.result == UnityWebRequest.Result.Success)
             {
                 var response = JsonUtility.FromJson<ResponseResult<LoginData>>(request.downloadHandler.text);
-                if (response.code == 0)
-                {
-                    // 联网登录成功
-                    isLoggedIn = true;
-                    isOfflineMode = false;
-                    token = response.data.token;
-                    SaveLocalCredentials(username, password);
-                    PlayerPrefs.SetString(PREF_TOKEN, token);
-
-                    if (AntiAddictionManager.Instance != null)
-                    {
-                        bool serverVerified = response.data.isVerified;
-                        bool localVerified = AntiAddictionManager.Instance.CheckLocalVerifyStatus(username);
-                        bool finalVerified = serverVerified || localVerified;
-
-                        AntiAddictionManager.Instance.isVerified = finalVerified;
-                        AntiAddictionManager.Instance.SaveLocalVerifyStatus(username, finalVerified);
-                    }
-
-                    callback?.Invoke(true, "登录成功");
-                }
-                else
-                {
-                    // 服务器返回密码错误等业务逻辑错误，不应该尝试离线登录
-                    callback?.Invoke(false, response.message);
-                }
+                if (response.code == 0) { loginSuccess = true; isLoggedIn = true; token = response.data.token; currentUsername = username; msg = "登录成功"; }
+                else msg = response.message;
             }
             else
             {
-                // 网络连接失败 -> 尝试离线登录
-                if (CheckLocalLogin(username, password))
-                {
-                    isLoggedIn = true;
-                    isOfflineMode = true;
-
-                    if (AntiAddictionManager.Instance != null)
-                    {
-                        bool localVerified = AntiAddictionManager.Instance.CheckLocalVerifyStatus(username);
-                        AntiAddictionManager.Instance.isVerified = localVerified;
-                    }
-                    callback?.Invoke(true, "离线登录成功");
-                }
-                else
-                {
-                    callback?.Invoke(false, "登录失败：网络异常且无本地存档");
-                }
+                if (CheckLocalLogin(username, password)) { loginSuccess = true; isLoggedIn = true; isOfflineMode = true; currentUsername = username; msg = "离线登录成功"; }
+                else msg = "登录失败：网络异常且无本地存档";
             }
+
+            if (loginSuccess)
+            {
+                SaveLocalCredentials(username, password);
+                // 🔥 初始化防沉迷数据（如果是已认证的普通账号，这里会读取到状态）
+                if (AntiAddictionManager.Instance != null) AntiAddictionManager.Instance.InitData(username);
+                if (SaveManager.Instance != null) SaveManager.Instance.LoadUserData(username);
+                callback?.Invoke(true, msg);
+            }
+            else callback?.Invoke(false, msg);
         }
     }
 
-    public void VerifyToken(Action<bool, string> callback) { }
+    public void VerifyToken(Action<bool, string> cb) { }
     public void ClearToken() { token = ""; PlayerPrefs.DeleteKey(PREF_TOKEN); }
 }

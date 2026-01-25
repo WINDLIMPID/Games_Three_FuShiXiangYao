@@ -1,4 +1,4 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
@@ -6,15 +6,15 @@ public class SceneController : MonoBehaviour
 {
     public static SceneController Instance;
 
-    [Header("ÅäÖÃ³¡¾°Ãû×Ö (¸ÄÃûÖ»ÓÃ¸ÄÕâÀï)")]
-    [Tooltip("Ö÷²Ëµ¥³¡¾°µÄÃû×Ö")]
+    [Header("é…ç½®åœºæ™¯åå­— (æ”¹ååªç”¨æ”¹è¿™é‡Œ)")]
+    [Tooltip("ä¸»èœå•åœºæ™¯çš„åå­—")]
     public string menuSceneName = "MenuScene";
 
-    [Tooltip("Õ½¶·ºËĞÄ³¡¾°µÄÃû×Ö")]
+    [Tooltip("æˆ˜æ–—æ ¸å¿ƒåœºæ™¯çš„åå­—")]
     public string battleSceneName = "MainScene";
 
-    [Header("¹ı¶É¶¯»­ (¿ÉÑ¡)")]
-    public CanvasGroup fadeCanvasGroup; // ÍÏÈëÒ»¸öÈ«ÆÁºÚÉ«µÄPanel
+    [Header("è¿‡æ¸¡åŠ¨ç”» (å¯é€‰)")]
+    public CanvasGroup fadeCanvasGroup; // æ‹–å…¥ä¸€ä¸ªå…¨å±é»‘è‰²çš„Panel
     public float fadeDuration = 0.5f;
 
     void Awake()
@@ -22,7 +22,7 @@ public class SceneController : MonoBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // ±£Ö¤ÇĞ³¡¾°Ê±²»Ïú»Ù
+            DontDestroyOnLoad(gameObject); // ä¿è¯åˆ‡åœºæ™¯æ—¶ä¸é”€æ¯
         }
         else
         {
@@ -31,16 +31,16 @@ public class SceneController : MonoBehaviour
     }
 
     /// <summary>
-    /// ·µ»ØÖ÷½çÃæ
+    /// è¿”å›ä¸»ç•Œé¢
     /// </summary>
     public void LoadMainMenu()
     {
-        Time.timeScale = 1f; // ÇĞ³¡¾°Ç°±ØĞë»Ö¸´Ê±¼ä£¡
+        Time.timeScale = 1f; // åˆ‡åœºæ™¯å‰å¿…é¡»æ¢å¤æ—¶é—´ï¼
         StartCoroutine(TransitionToScene(menuSceneName));
     }
 
     /// <summary>
-    /// ½øÈëÕ½¶·³¡¾° (ĞÂÓÎÏ·/ÏÂÒ»¹Ø/ÖØ¿ª)
+    /// è¿›å…¥æˆ˜æ–—åœºæ™¯ (æ–°æ¸¸æˆ/ä¸‹ä¸€å…³/é‡å¼€)
     /// </summary>
     public void LoadBattle()
     {
@@ -49,7 +49,7 @@ public class SceneController : MonoBehaviour
     }
 
     /// <summary>
-    /// ÖØĞÂ¼ÓÔØµ±Ç°³¡¾° (Ô­µØ¸´»î)
+    /// é‡æ–°åŠ è½½å½“å‰åœºæ™¯ (åŸåœ°å¤æ´»)
     /// </summary>
     public void ReloadCurrentScene()
     {
@@ -58,13 +58,13 @@ public class SceneController : MonoBehaviour
         StartCoroutine(TransitionToScene(currentName));
     }
 
-    // Í³Ò»µÄ¼ÓÔØĞ­³Ì (´ø¼òµ¥µÄµ­Èëµ­³ö)
+    // ç»Ÿä¸€çš„åŠ è½½åç¨‹ (å¸¦ç®€å•çš„æ·¡å…¥æ·¡å‡º)
     private IEnumerator TransitionToScene(string sceneName)
     {
-        // 1. µ­³ö (±äºÚ)
+        // 1. æ·¡å‡º (å˜é»‘)
         if (fadeCanvasGroup != null)
         {
-            fadeCanvasGroup.blocksRaycasts = true; // ×èµ²µã»÷
+            fadeCanvasGroup.blocksRaycasts = true; // é˜»æŒ¡ç‚¹å‡»
             float timer = 0f;
             while (timer < fadeDuration)
             {
@@ -74,11 +74,11 @@ public class SceneController : MonoBehaviour
             }
         }
 
-        // 2. ÕæÕı¼ÓÔØ³¡¾°
+        // 2. çœŸæ­£åŠ è½½åœºæ™¯
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         while (!op.isDone) yield return null;
 
-        // 3. µ­Èë (±äÁÁ)
+        // 3. æ·¡å…¥ (å˜äº®)
         if (fadeCanvasGroup != null)
         {
             float timer = 0f;
@@ -88,7 +88,7 @@ public class SceneController : MonoBehaviour
                 fadeCanvasGroup.alpha = Mathf.Lerp(1, 0, timer / fadeDuration);
                 yield return null;
             }
-            fadeCanvasGroup.blocksRaycasts = false; // »Ö¸´µã»÷
+            fadeCanvasGroup.blocksRaycasts = false; // æ¢å¤ç‚¹å‡»
         }
     }
 }

@@ -5,97 +5,81 @@ public class ItemManager : MonoBehaviour
 {
     public static ItemManager Instance;
 
-    // --- 存档 Key ---
-    private const string PREF_LINGZHI = "Item_LingZhi";
-    private const string PREF_THUNDER = "Item_ThunderCharm"; // 🔥 新增：雷符存档Key
-
-    // --- 内存变量 ---
-    private int _lingZhiCount = 0;
-    private int _thunderCount = 0; // 🔥 新增：雷符数量
-
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject); // 切换场景不销毁
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
             Destroy(gameObject);
-            return;
         }
-
-        // 初始化时读取存档
-        LoadItems();
     }
 
     // ==========================================
-    // 灵芝相关 (保持不变)
+    // 灵芝相关 (转接 SaveManager)
     // ==========================================
-    public int GetLingZhiCount() { return _lingZhiCount; }
+    public int GetLingZhiCount()
+    {
+        if (SaveManager.Instance != null)
+            return SaveManager.Instance.GetLingZhi();
+        return 0;
+    }
 
     public void AddLingZhi(int amount)
     {
-        _lingZhiCount += amount;
-        SaveItems();
-        Debug.Log($"📦 获得灵芝！当前数量: {_lingZhiCount}");
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.AddLingZhi(amount);
+            Debug.Log($"📦 获得灵芝！当前数量: {SaveManager.Instance.GetLingZhi()}");
+        }
     }
 
     public bool UseLingZhi(int amount = 1)
     {
-        if (_lingZhiCount >= amount)
+        if (SaveManager.Instance != null)
         {
-            _lingZhiCount -= amount;
-            SaveItems();
-            return true;
+            return SaveManager.Instance.UseLingZhi(amount);
         }
         return false;
     }
 
     // ==========================================
-    // 🔥🔥🔥 新增：雷神符 核心逻辑 🔥🔥🔥
+    // 雷神符相关 (转接 SaveManager)
     // ==========================================
 
     public int GetThunderCount()
     {
-        return _thunderCount;
+        if (SaveManager.Instance != null)
+            return SaveManager.Instance.GetThunder();
+        return 0;
     }
 
     public void AddThunder(int amount)
     {
-        _thunderCount += amount;
-        SaveItems();
-        Debug.Log($"⚡ 获得雷神符！当前数量: {_thunderCount}");
+        if (SaveManager.Instance != null)
+        {
+            SaveManager.Instance.AddThunder(amount);
+            Debug.Log($"⚡ 获得雷神符！当前数量: {SaveManager.Instance.GetThunder()}");
+        }
     }
 
     public bool UseThunder(int amount = 1)
     {
-        if (_thunderCount >= amount)
+        if (SaveManager.Instance != null)
         {
-            _thunderCount -= amount;
-            SaveItems();
-            return true;
+            if (SaveManager.Instance.UseThunder(amount))
+            {
+                return true;
+            }
+            else
+            {
+                Debug.Log("❌ 雷神符不足！");
+                return false;
+            }
         }
-        else
-        {
-            Debug.Log("❌ 雷神符不足！");
-            return false;
-        }
-    }
-
-    // --- 内部存档逻辑 (已更新) ---
-
-    private void SaveItems()
-    {
-        PlayerPrefs.SetInt(PREF_LINGZHI, _lingZhiCount);
-        PlayerPrefs.SetInt(PREF_THUNDER, _thunderCount); // 🔥 保存雷符
-        PlayerPrefs.Save();
-    }
-
-    private void LoadItems()
-    {
-        _lingZhiCount = PlayerPrefs.GetInt(PREF_LINGZHI, 0);
-        _thunderCount = PlayerPrefs.GetInt(PREF_THUNDER, 0); // 🔥 读取雷符
+        return false;
     }
 }

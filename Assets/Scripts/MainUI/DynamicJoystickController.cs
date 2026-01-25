@@ -1,46 +1,62 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.EventSystems;
 
 public class DynamicJoystickController : MonoBehaviour, IPointerDownHandler, IDragHandler, IPointerUpHandler
 {
-    [Header("ÒıÓÃÉèÖÃ")]
-    public Joystick joystick; // ÍÏÈëÄãµÄ Fixed Joystick Ô¤ÖÆÌå
-    public RectTransform joystickRect; // Ò¡¸ËµÄ RectTransform
+    [Header("å¼•ç”¨è®¾ç½®")]
+    public Joystick joystick; // æ‹–å…¥ä½ çš„ Fixed Joystick é¢„åˆ¶ä½“
+    public RectTransform joystickRect; // æ‘‡æ†çš„ RectTransform
 
     private CanvasGroup canvasGroup;
+    private Vector2 initialAnchoredPosition;
 
     void Awake()
     {
-        // ³¢ÊÔ»ñÈ¡ CanvasGroup£¬Èç¹ûÃ»ÓĞ¾Í×Ô¶¯Ìí¼ÓÒ»¸ö
+        // å°è¯•è·å– CanvasGroupï¼Œå¦‚æœæ²¡æœ‰å°±è‡ªåŠ¨æ·»åŠ ä¸€ä¸ª
         canvasGroup = joystick.GetComponent<CanvasGroup>();
         if (canvasGroup == null) canvasGroup = joystick.gameObject.AddComponent<CanvasGroup>();
 
-        // ³õÊ¼×´Ì¬Òş²Ø
+        // è®°å½•ä¸€ä¸‹åˆå§‹ä½ç½®ï¼ˆå¯é€‰ï¼‰
+        initialAnchoredPosition = joystickRect.anchoredPosition;
+
+        // åˆå§‹çŠ¶æ€éšè—
         HideJoystick();
     }
 
-    // µ±ÊÖÖ¸°´ÏÂÊ±´¥·¢
+    // å½“æ‰‹æŒ‡æŒ‰ä¸‹æ—¶è§¦å‘
     public void OnPointerDown(PointerEventData eventData)
     {
-        // 1. ½«Ò¡¸ËÒÆ¶¯µ½ÊÖÖ¸µã»÷µÄÎ»ÖÃ
-        // ×¢Òâ£ºÈç¹ûÄãµÄ UI Ëõ·ÅÄ£Ê½²»Í¬£¬¿ÉÄÜĞèÒªÓÃ RectTransformUtility.ScreenPointToLocalPointInRectangle ½øĞĞ×ª»»
-        // ÕâÀï¼ÙÉè TouchArea ºÍ Joystick ÔÚÍ¬Ò»¸ö Canvas ÏÂÇÒÃ»ÓĞ¸´ÔÓµÄËõ·Å²îÒì
-        joystickRect.position = eventData.position;
+        // 1. å°†æ‘‡æ†ç§»åŠ¨åˆ°æ‰‹æŒ‡ç‚¹å‡»çš„ä½ç½®
+        // ä½¿ç”¨ RectTransformUtility ç¡®ä¿åæ ‡è½¬æ¢æ­£ç¡®ï¼ˆå³ä½¿ Canvas ç¼©æ”¾æ¨¡å¼ä¸åŒä¹Ÿèƒ½æ­£å¸¸å·¥ä½œï¼‰
+        Vector2 localPoint;
+        if (RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            transform as RectTransform,
+            eventData.position,
+            eventData.pressEventCamera,
+            out localPoint))
+        {
+            // æ³¨æ„ï¼šè¿™é‡Œæˆ‘ä»¬å°†æ‘‡æ†çš„ä½ç½®è®¾ç½®ä¸ºç›¸å¯¹äºæœ¬è§¦æ‘¸åŒºåŸŸçš„å±€éƒ¨åæ ‡
+            // å‡è®¾ joystickRect æ˜¯æœ¬è„šæœ¬æ‰€åœ¨ç‰©ä½“çš„å­ç‰©ä½“ï¼Œæˆ–è€…åŒçº§ç‰©ä½“
+            // å¦‚æœ joystickRect æ˜¯å…¨å±€çš„ï¼Œå¯èƒ½éœ€è¦è°ƒæ•´çˆ¶çº§è½¬æ¢
+            joystickRect.position = eventData.position;
+        }
+        else
+        {
+            joystickRect.position = eventData.position;
+        }
 
-        // 2. ÏÔÊ¾Ò¡¸Ë
+        // 2. æ˜¾ç¤ºæ‘‡æ†
         ShowJoystick();
 
-        // 3. ÊÖ¶¯µ÷ÓÃ²å¼şµÄ°´ÏÂÂß¼­£¬Ê¹ÆäÁ¢¼´½øÈë¿ÉÍÏ×§×´Ì¬
+        // 3. æ‰‹åŠ¨è°ƒç”¨æ’ä»¶çš„æŒ‰ä¸‹é€»è¾‘ï¼Œä½¿å…¶ç«‹å³è¿›å…¥å¯æ‹–æ‹½çŠ¶æ€
         joystick.OnPointerDown(eventData);
     }
 
-    // ±ØĞëÊµÏÖ´Ë½Ó¿Ú£¬·ñÔò OnPointerDown ºóµÄÍÏ×§¿ÉÄÜÎŞ·¨´«µ¼¸ø²å¼ş
     public void OnDrag(PointerEventData eventData)
     {
         joystick.OnDrag(eventData);
     }
 
-    // ÊÖÖ¸Ì§Æğ
     public void OnPointerUp(PointerEventData eventData)
     {
         joystick.OnPointerUp(eventData);
@@ -50,10 +66,12 @@ public class DynamicJoystickController : MonoBehaviour, IPointerDownHandler, IDr
     private void ShowJoystick()
     {
         canvasGroup.alpha = 1f;
+        canvasGroup.blocksRaycasts = true; // æ˜¾ç¤ºæ—¶ï¼šå…è®¸æ‘‡æ†äº¤äº’
     }
 
     private void HideJoystick()
     {
         canvasGroup.alpha = 0f;
+        canvasGroup.blocksRaycasts = false; // ğŸ”¥ å…³é”®ä¿®å¤ï¼šéšè—æ—¶ï¼Œè®©å°„çº¿ç©¿é€æ‘‡æ†ï¼Œå¦åˆ™ä¸‹æ¬¡ç‚¹å‡»ä¼šç‚¹åˆ°é€æ˜çš„æ‘‡æ†ä¸Šï¼
     }
 }

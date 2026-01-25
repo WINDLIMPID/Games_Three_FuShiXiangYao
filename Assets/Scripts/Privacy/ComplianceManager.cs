@@ -1,27 +1,33 @@
-using UnityEngine;
-using UnityEngine.UI;
+ï»¿using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
-using TMPro;
 
 public class ComplianceManager : MonoBehaviour
 {
-    [Header("ÅäÖÃ")]
-    public float displayTime = 5.0f; // ±ØĞëÉèÎª5Ãë»òÒÔÉÏ
-    public string nextSceneName = "MainMenu"; // ½¡¿µÖÒ¸æÍêºóÌø×ªµÄ³¡¾°
+    [Header("é…ç½®")]
+    public float displayTime = 5.0f; // å¿…é¡»è®¾ä¸º5ç§’æˆ–ä»¥ä¸Š
+    public string nextSceneName = "MainMenuScene";
 
     private void Start()
     {
-        // ¿ªÆôĞ­³Ì¿ªÊ¼µ¹¼ÆÊ±
         StartCoroutine(LoadNextScene());
     }
 
     private IEnumerator LoadNextScene()
     {
-        // Ç¿ÖÆµÈ´ı£¬²»ÊÜ Time.timeScale Ó°Ïì
+        // å¼ºåˆ¶ç­‰å¾…ï¼Œä¸å— Time.timeScale å½±å“
         yield return new WaitForSecondsRealtime(displayTime);
 
-        // Ìø×ª³¡¾°
-        SceneManager.LoadScene(nextSceneName);
+        // ğŸ”¥ğŸ”¥ğŸ”¥ ç»Ÿä¸€ä½¿ç”¨ SceneController (å¦‚æœæœ‰çš„è¯) ğŸ”¥ğŸ”¥ğŸ”¥
+        if (SceneController.Instance != null)
+        {
+            // è¿™é‡Œå› ä¸ºæ˜¯ä»å¥åº·å¿ å‘Šè·³è½¬ï¼Œå¯ä»¥ç”¨é€šç”¨æ–¹æ³•ï¼Œä¹Ÿå¯ä»¥ç›´æ¥è·³
+            // å‡è®¾ LoadMainMenu() å°±æ˜¯å» MainMenuScene
+            SceneController.Instance.LoadMainMenu();
+        }
+        else
+        {
+            SceneManager.LoadScene(nextSceneName);
+        }
     }
 }

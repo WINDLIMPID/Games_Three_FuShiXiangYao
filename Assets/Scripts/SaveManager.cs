@@ -1,20 +1,34 @@
 ﻿using UnityEngine;
+using System.IO;
+using System;
+
+[Serializable]
+public class PlayerData
+{
+    public int coin = 0;              // 金币
+    public int unlockedLevel = 1;     // 已解锁最大关卡
+    public int highScore = 0;         // 最高分
+    public bool isTutorialComplete = false; // 新手引导
+
+    // 🔥🔥🔥 新增：道具数据存入账号存档 🔥🔥🔥
+    public int lingZhi = 0;  // 灵芝数量
+    public int thunder = 0;  // 雷符数量
+}
 
 public class SaveManager : MonoBehaviour
 {
     public static SaveManager Instance;
 
-    // --- 存档 Key 定义 ---
-    private const string PREF_KEY_MAX_LEVEL = "MaxLevelReached";
-    private const string PREF_KEY_TUTORIAL = "IsTutorialFinished";
-    private const string PREF_KEY_HIGH_SCORE = "EndlessHighScore";
+    public PlayerData playerData = new PlayerData();
+    private string currentUsername = "";
 
-    // 🔥 必须和 MainMenu.cs 里用的 Key 保持一致
-    private const string PREF_KEY_STORY = "HasWatchedIntroStory";
+    // 金币变化事件
+    public event Action<int> OnCoinChanged;
+    // 🔥 道具变化事件 (可选，方便UI刷新)
+    public event Action OnItemChanged;
 
     void Awake()
     {
-        // 保证全局唯一且不销毁
         if (Instance == null)
         {
             Instance = this;
@@ -26,97 +40,172 @@ public class SaveManager : MonoBehaviour
         }
     }
 
-    // =========================================================
-    // 📖 原有功能：关卡解锁
-    // =========================================================
+    // ==========================================
+    // 💰 金币逻辑
+    // ==========================================
+    public int GetCoin() => playerData.coin;
 
-    /// <summary>
-    /// 获取当前已解锁的最大关卡索引（从1开始）
-    /// </summary>
-    public int GetUnlockedLevel()
+    public void AddMoney(int amount)
     {
-        return PlayerPrefs.GetInt(PREF_KEY_MAX_LEVEL, 1);
+        playerData.coin += amount;
+        Save();
+        OnCoinChanged?.Invoke(playerData.coin);
     }
 
-    /// <summary>
-    /// 解锁下一关
-    /// </summary>
-    public void CompleteLevel(int currentLevelCompleted)
+    public bool SpendMoney(int amount)
     {
-        int maxReached = GetUnlockedLevel();
-        // 如果通关的是当前最新的关卡，解锁下一关
-        if (currentLevelCompleted >= maxReached)
+        if (playerData.coin >= amount)
         {
-            int nextLevel = currentLevelCompleted + 1;
-            PlayerPrefs.SetInt(PREF_KEY_MAX_LEVEL, nextLevel);
-            PlayerPrefs.Save();
-            Debug.Log($"🎉 存档更新！已解锁第 {nextLevel} 关");
-        }
-    }
-
-    // =========================================================
-    // 📖 原有功能：排行榜分数
-    // =========================================================
-
-    /// <summary>
-    /// 获取历史最高分
-    /// </summary>
-    public int GetHighScore()
-    {
-        return PlayerPrefs.GetInt(PREF_KEY_HIGH_SCORE, 0);
-    }
-
-    /// <summary>
-    /// 尝试保存最高分（只有比旧分数高才存）
-    /// </summary>
-    /// <returns>如果是新纪录返回 true</returns>
-    public bool TrySaveHighScore(int newScore)
-    {
-        int currentHigh = GetHighScore();
-        if (newScore > currentHigh)
-        {
-            PlayerPrefs.SetInt(PREF_KEY_HIGH_SCORE, newScore);
-            PlayerPrefs.Save();
-            Debug.Log($"🏆 新纪录诞生！旧分: {currentHigh} -> 新分: {newScore}");
+            playerData.coin -= amount;
+            Save();
+            OnCoinChanged?.Invoke(playerData.coin);
             return true;
         }
         return false;
     }
 
-    // =========================================================
-    // 🛠️ 测试工具区 (右键点击组件使用)
-    // =========================================================
+    // ==========================================
+    // 📦 道具逻辑 (接管 ItemManager 的数据)
+    // ==========================================
 
-    [ContextMenu("测试: 重置新手引导")]
-    public void ResetTutorial()
+    // --- 灵芝 ---
+    public int GetLingZhi() => playerData.lingZhi;
+
+    public void AddLingZhi(int amount)
     {
-        PlayerPrefs.DeleteKey(PREF_KEY_TUTORIAL);
-        PlayerPrefs.Save();
-        Debug.Log("👶 新手引导已重置！");
+        playerData.lingZhi += amount;
+        Save();
+        OnItemChanged?.Invoke();
     }
 
-    [ContextMenu("测试: 重置最高分")]
-    public void ResetHighScore()
+    public bool UseLingZhi(int amount)
     {
-        PlayerPrefs.DeleteKey(PREF_KEY_HIGH_SCORE);
-        PlayerPrefs.Save();
-        Debug.Log("🏆 最高分已清零！");
+        if (playerData.lingZhi >= amount)
+        {
+            playerData.lingZhi -= amount;
+            Save();
+            OnItemChanged?.Invoke();
+            return true;
+        }
+        return false;
     }
 
-    // 🔥🔥🔥 新增：右键点击 SaveManager 组件就能看到这个选项 🔥🔥🔥
-    [ContextMenu("测试: 重置剧情漫画 (变回新号)")]
-    public void ResetStoryStatus()
+    // --- 雷符 ---
+    public int GetThunder() => playerData.thunder;
+
+    public void AddThunder(int amount)
     {
-        PlayerPrefs.DeleteKey(PREF_KEY_STORY);
-        PlayerPrefs.Save();
-        Debug.Log("📖 剧情漫画状态已重置！下次运行将自动播放漫画。");
+        playerData.thunder += amount;
+        Save();
+        OnItemChanged?.Invoke();
     }
 
-    [ContextMenu("测试: 彻底重置所有数据 (删库)")]
-    public void ResetAllData()
+    public bool UseThunder(int amount)
     {
-        PlayerPrefs.DeleteAll();
-        PlayerPrefs.Save();
-        Debug.Log("🗑️ 所有数据已清空，游戏回到初始状态。");
+        if (playerData.thunder >= amount)
+        {
+            playerData.thunder -= amount;
+            Save();
+            OnItemChanged?.Invoke();
+            return true;
+        }
+        return false;
+    }
+
+    // ==========================================
+    // 💾 存档/读档逻辑
+    // ==========================================
+    public void LoadUserData(string username)
+    {
+        currentUsername = username;
+        string path = GetSavePath(username);
+
+        if (File.Exists(path))
+        {
+            try
+            {
+                playerData = JsonUtility.FromJson<PlayerData>(File.ReadAllText(path));
+            }
+            catch
+            {
+                ResetToNewUser();
+            }
+        }
+        else
+        {
+            ResetToNewUser();
+            Save();
+        }
+
+        // 读档后通知 UI 刷新
+        OnCoinChanged?.Invoke(playerData.coin);
+        OnItemChanged?.Invoke();
+    }
+
+    private void ResetToNewUser()
+    {
+        playerData = new PlayerData();
+        playerData.unlockedLevel = 1;
+        playerData.coin = 0;
+        playerData.lingZhi = 0; // 新号默认 0
+        playerData.thunder = 0; // 新号默认 0
+    }
+
+    public void Save()
+    {
+        if (string.IsNullOrEmpty(currentUsername)) return;
+        File.WriteAllText(GetSavePath(currentUsername), JsonUtility.ToJson(playerData));
+    }
+
+    private string GetSavePath(string username) => Path.Combine(Application.persistentDataPath, $"save_{username}.json");
+
+    // ==========================================
+    // 🎮 游戏进度逻辑
+    // ==========================================
+    public int GetUnlockedLevel() => playerData.unlockedLevel;
+    public int GetHighScore() => playerData.highScore;
+
+    public void CompleteLevel(int currentLevelIndex)
+    {
+        if (currentLevelIndex >= playerData.unlockedLevel)
+        {
+            playerData.unlockedLevel = currentLevelIndex + 1;
+            Save();
+        }
+    }
+
+    public bool TrySaveHighScore(int score)
+    {
+        if (score > playerData.highScore)
+        {
+            playerData.highScore = score;
+            Save();
+            return true;
+        }
+        return false;
+    }
+
+    public bool IsTutorialComplete() => playerData.isTutorialComplete;
+
+    public void CompleteTutorial()
+    {
+        playerData.isTutorialComplete = true;
+        Save();
+    }
+
+    public void ApplyTestAccountConfig(AccountTier tier)
+    {
+        if (tier == AccountTier.None) return;
+        if (tier == AccountTier.Senior)
+        {
+            playerData.unlockedLevel = 100;
+            playerData.coin = 99999;
+            playerData.isTutorialComplete = true;
+            playerData.lingZhi = 99; // 测试号送道具
+            playerData.thunder = 99;
+        }
+        Save();
+        OnCoinChanged?.Invoke(playerData.coin);
+        OnItemChanged?.Invoke();
     }
 }

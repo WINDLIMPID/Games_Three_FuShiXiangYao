@@ -19,49 +19,78 @@ public class UI_RealNamePanel : MonoBehaviour
         string n = nameInput.text.Trim();
         string id = idCardInput.text.Trim();
 
-        // 基础格式校验
         if (n.Length < 2 || (id.Length != 15 && id.Length != 18))
         {
+            statusText.color = Color.red;
             statusText.text = "请输入有效的姓名和身份证号";
             return;
         }
 
-        // 🔥🔥🔥 核心：获取当前是谁在登录 🔥🔥🔥
         string currentUsername = "";
         if (AccountManager.Instance != null)
         {
             currentUsername = AccountManager.Instance.GetLastUsedUsername();
         }
 
-        // 异常处理：如果没登录就想实名（通常不会发生），给个临时ID
         if (string.IsNullOrEmpty(currentUsername))
         {
-            Debug.LogError("❌ 警告：未获取到当前账号名！");
-            statusText.text = "账号状态异常，请重新登录";
+            statusText.text = "账号异常，请重新登录";
             return;
         }
 
+        statusText.color = Color.white;
         statusText.text = "正在认证...";
         submitBtn.interactable = false;
 
-        Debug.Log($"📝 正在为账号 [{currentUsername}] 提交实名认证...");
-
-        // 发送请求时，传入 currentUsername
-        AntiAddictionManager.Instance.RequestVerify(n, id, currentUsername, (success) => {
+        AntiAddictionManager.Instance.RequestVerify(n, id, currentUsername, (success, msg) => {
             submitBtn.interactable = true;
+
             if (success)
             {
-                statusText.text = "认证成功！";
+                // 1. 获取限制文案
+                int age = AntiAddictionManager.Instance.currentUserAge;
+                string limitMsg = AntiAddictionManager.Instance.CheckLoginLimit(age);
 
-                // 成功后1秒关闭界面
-                Invoke("ClosePanel", 1.0f);
+                // 2. 如果有限制文案 -> 弹出大卷轴
+                if (!string.IsNullOrEmpty(limitMsg))
+                {
+                    statusText.text = ""; // 清空小红字，避免重复
+
+                    if (GlobalCanvas.Instance != null)
+                    {
+                        // 弹窗提示，且只有一个“确定”按钮
+                        GlobalCanvas.Instance.ShowTip(limitMsg, null, "我知道了");
+                    }
+
+                    Debug.LogWarning("[UI] 实名成功但被限制: " + limitMsg);
+                    // 不关闭界面，阻止进入游戏
+                }
+                else
+                {
+                    // 3. 如果无限制 -> 绿字提示 -> 进游戏
+                    statusText.color = Color.green;
+                    statusText.text = "认证成功，祝您游戏愉快！";
+
+                    Invoke("ClosePanel", 1.5f);
+
+                    MainMenu mainMenu = FindObjectOfType<MainMenu>();
+                    if (mainMenu != null)
+                    {
+                        mainMenu.CheckVerificationFlow();
+                    }
+                }
             }
             else
             {
-                statusText.text = "认证失败，信息不匹配";
+                // 4. 认证失败（普通错误）-> 只显示红字，不弹窗
+                statusText.color = Color.red;
+                statusText.text = msg;
             }
         });
     }
 
-    void ClosePanel() => gameObject.SetActive(false);
+    void ClosePanel()
+    {
+        gameObject.SetActive(false);
+    }
 }

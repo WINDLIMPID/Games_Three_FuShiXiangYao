@@ -6,3 +6,7 @@
 /[Uu]ser[Ss]ettings/
 *.csproj
 *.sln
+/[Aa]ssets/Font/
+
+# 新增 Visual Studio 缓存
+.vs/

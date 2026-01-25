@@ -1,66 +1,57 @@
-using UnityEngine;
+ï»¿using UnityEngine;
 using UnityEngine.UI;
 using DG.Tweening;
 
 public class PrivacyPanel : MonoBehaviour
 {
-    [Header("UI ×é¼ş")]
-    public GameObject panelRoot;   // Õû¸öµ¯´°½çÃæ
-    public Transform windowBox;    // ÖĞ¼äµÄÄÇ¸öµ¯´°¿ò (ÓÃÓÚ×ö¶¯»­)
-    public Button agreeBtn;        // Í¬Òâ°´Å¥ (ÂÌÉ«)
-    public Button exitBtn;         // ²»Í¬Òâ/ÍË³ö°´Å¥ (»ÒÉ«)
+    [Header("UI ç»„ä»¶")]
+    public GameObject panelRoot;
+    public Transform windowBox;
+    public Button agreeBtn;
+    public Button exitBtn;
 
-    [Header("Ğ­ÒéÁ´½Ó (±ØÌî)")]
-    // ÕâÀïÌîÄã¹«Ë¾¹ÙÍø»òÕßÔÚÏßÎÄµµµÄµØÖ·£¬Èç¹ûÃ»ÓĞ£¬ÏÈÌî¸ö°Ù¶ÈµÄ×ö²âÊÔ
+    [Header("åè®®é“¾æ¥")]
     public string userAgreementUrl = "http://www.yourgame.com/agreement";
     public string privacyPolicyUrl = "http://www.yourgame.com/privacy";
 
-    private const string PREFS_KEY = "HasAgreedPrivacy_V1"; // °æ±¾ºÅV1£¬ÒÔºó¸ÄÁËĞ­Òé¿ÉÒÔ»»³ÉV2ÈÃÍæ¼ÒÖØÇ©
+    // è¿™ä¸ª Key å†³å®šäº†å®ƒæ˜¯è·Ÿè®¾å¤‡ç»‘å®šçš„
+    private const string PREFS_KEY = "HasAgreedPrivacy_V1";
 
     void Start()
     {
-        // 1. ¼ì²éÊÇ·ñÒÑ¾­Í¬Òâ¹ı
+        // 1. æ£€æŸ¥æ˜¯å¦å·²ç»åŒæ„è¿‡ (è®¾å¤‡çº§æ£€æŸ¥)
         if (PlayerPrefs.GetInt(PREFS_KEY, 0) == 1)
         {
-            // ÒÑ¾­Í¬Òâ¹ı£¬Ö±½ÓÏú»Ù×Ô¼º£¬²»µ²Â·
-            Destroy(gameObject);
+            Destroy(gameObject); // åŒæ„è¿‡å°±é”€æ¯
             return;
         }
 
-        // 2. Ã»Í¬Òâ¹ı£¬ÏÔÊ¾µ¯´°£¬²¢ÔİÍ£ÓÎÏ·Âß¼­£¨·ÀÖ¹Ö÷½çÃæ±³¾°ÂÒ¶¯£©
+        // 2. æ²¡åŒæ„è¿‡ï¼Œæ˜¾ç¤º
         ShowPanel();
     }
 
     void ShowPanel()
     {
         panelRoot.SetActive(true);
-
-        // ¼òµ¥µÄ¹û¶³µ¯³ö¶¯»­
         windowBox.localScale = Vector3.zero;
         windowBox.DOScale(1f, 0.5f).SetEase(Ease.OutBack);
 
-        // °ó¶¨°´Å¥ÊÂ¼ş
+        agreeBtn.onClick.RemoveAllListeners();
+        exitBtn.onClick.RemoveAllListeners();
+
         agreeBtn.onClick.AddListener(OnAgree);
         exitBtn.onClick.AddListener(OnExit);
     }
 
-    public void OpenUserAgreement()
-    {
-        Application.OpenURL(userAgreementUrl);
-    }
-
-    public void OpenPrivacyPolicy()
-    {
-        Application.OpenURL(privacyPolicyUrl);
-    }
+    public void OpenUserAgreement() => Application.OpenURL(userAgreementUrl);
+    public void OpenPrivacyPolicy() => Application.OpenURL(privacyPolicyUrl);
 
     void OnAgree()
     {
-        // 1. ¼ÇÂ¼×´Ì¬£ºÍæ¼ÒÒÑÍ¬Òâ
+        // è®°å½•åŒæ„çŠ¶æ€
         PlayerPrefs.SetInt(PREFS_KEY, 1);
         PlayerPrefs.Save();
 
-        // 2. ²¥·Å¹Ø±Õ¶¯»­²¢½øÈëÓÎÏ·
         windowBox.DOScale(0f, 0.3f).SetEase(Ease.InBack).OnComplete(() =>
         {
             Destroy(gameObject);
@@ -69,11 +60,18 @@ public class PrivacyPanel : MonoBehaviour
 
     void OnExit()
     {
-        // Ó²ĞÔ¹æ¶¨£º²»Í¬Òâ±ØĞëÍË³öÓÎÏ·
 #if UNITY_EDITOR
         UnityEditor.EditorApplication.isPlaying = false;
 #else
         Application.Quit();
 #endif
+    }
+
+    // ğŸ”¥ğŸ”¥ğŸ”¥ è°ƒè¯•ç”¨ï¼šå³é”®ç‚¹å‡»ç»„ä»¶ -> Reset Privacy å¯ä»¥é‡ç½®çŠ¶æ€ ğŸ”¥ğŸ”¥ğŸ”¥
+    [ContextMenu("Reset Privacy Status")]
+    public void ClearPrivacyData()
+    {
+        PlayerPrefs.DeleteKey(PREFS_KEY);
+        Debug.Log("éšç§åè®®çŠ¶æ€å·²é‡ç½®ï¼ä¸‹æ¬¡è¿è¡Œä¼šé‡æ–°å¼¹çª—ã€‚");
     }
 }

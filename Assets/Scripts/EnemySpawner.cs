@@ -12,18 +12,16 @@ public class EnemySpawner : MonoBehaviour
 
     [Header("=== 核心引用 ===")]
     public VictoryUI victoryUI;
-    public UI_EndlessSettlement endScoreUI;
+    public UI_EndlessSettlement endScoreUI; // 无尽模式结算界面
 
     [Header("=== 核心设置 ===")]
     public Transform[] spawnPoints;
     public GameObject playerManagerPrefab;
 
-    [Header("=== 战斗 UI - HUD 显示 ===")]
+    [Header("=== 战斗 UI ===")]
     public TextMeshProUGUI timerText;
     public TextMeshProUGUI stageNameText;
     public TextMeshProUGUI scoreText;
-
-    [Header("=== 战斗 UI - 按钮 ===")]
     public Button settingsButton;
     public Button homeButton;
     public Button replayButton;
@@ -34,11 +32,12 @@ public class EnemySpawner : MonoBehaviour
     public List<EnemyWave> waves = new List<EnemyWave>();
     public int maxEnemyCount = 300;
 
-    [Header("无尽模式状态")]
+    [Header("状态")]
     public int currentScore = 0;
-    public bool isSpawningPaused = false;
 
-    // 内部变量
+    // 默认暂停
+    public bool isSpawningPaused = true;
+
     private float _gameTime = 0f;
     private float _spawnTimer = 0f;
     private int _currentWaveIndex = 0;
@@ -46,17 +45,19 @@ public class EnemySpawner : MonoBehaviour
     private Transform _playerTransform;
 
     public bool IsEndlessMode => levelWinTime > 36000f;
+    public int killCount = 0;
 
     void Awake()
     {
         Instance = this;
+        isSpawningPaused = true;
     }
 
     void Start()
     {
         if (victoryUI == null) victoryUI = FindObjectOfType<VictoryUI>();
+        if (endScoreUI == null) endScoreUI = FindObjectOfType<UI_EndlessSettlement>();
 
-        // 读取配置
         string targetMapName = "Map1Point";
         if (GlobalConfig.Instance != null && GlobalConfig.Instance.currentLevelConfig != null)
         {
@@ -65,14 +66,9 @@ public class EnemySpawner : MonoBehaviour
             this.levelWinTime = config.surviveDuration;
             this.currentLevelIndex = GlobalConfig.Instance.currentLevelIndex;
             if (stageNameText != null) stageNameText.text = config.displayTitle;
-
-            if (!string.IsNullOrEmpty(config.spawnPointGroupName))
-            {
-                targetMapName = config.spawnPointGroupName;
-            }
+            if (!string.IsNullOrEmpty(config.spawnPointGroupName)) targetMapName = config.spawnPointGroupName;
         }
 
-        // 仅无尽模式显示分数
         if (scoreText != null)
         {
             scoreText.gameObject.SetActive(IsEndlessMode);
@@ -81,17 +77,29 @@ public class EnemySpawner : MonoBehaviour
 
         FindSpawnPointsAndSetupPlayer(targetMapName);
         BindFunctionButtons();
+        UpdateTimerUI();
 
-        if (PlayerPrefs.GetInt("IsTutorialFinished", 0) == 0)
-        {
-            isSpawningPaused = true;
-        }
+        isSpawningPaused = true;
     }
 
-    public void StartSpawning() => isSpawningPaused = false;
+    public void StartSpawning()
+    {
+        isSpawningPaused = false;
+        Debug.Log("💀 敌人生成器启动！开始刷怪 & 计时！");
+    }
+
+    // 无尽模式触发结算
+    public void OnEndlessModeGameOver()
+    {
+        _isLevelFinished = true;
+        Time.timeScale = 0f;
+        ClearBattlefield();
+        StartCoroutine(DelayedEndlessOverProcess());
+    }
 
     public void AddScore(int amount = 1)
     {
+        killCount += amount;
         if (IsEndlessMode)
         {
             currentScore += amount;
@@ -99,105 +107,33 @@ public class EnemySpawner : MonoBehaviour
         }
     }
 
-    // =========================================================
-    // 🔥🔥🔥 核心修复：彻底打扫战场 (怪 + 经验球)
-    // =========================================================
     public void ClearBattlefield()
     {
-        // 1. 清理敌人
         GameObject[] enemies = GameObject.FindGameObjectsWithTag("Enemy");
         foreach (var enemy in enemies)
         {
             if (PoolManager.Instance != null) PoolManager.Instance.Despawn(enemy);
             else Destroy(enemy);
         }
-
-        // 2. 🔥🔥 关键：清理所有经验球！防止在那1秒等待期内吃到经验升级
         ExpGem[] gems = FindObjectsOfType<ExpGem>();
         foreach (var gem in gems)
         {
             if (PoolManager.Instance != null) PoolManager.Instance.Despawn(gem.gameObject);
             else Destroy(gem.gameObject);
         }
-
-        // 3. 🔥🔥 保底：如果有升级弹窗正在显示，强制关掉
         if (UpgradeManager.Instance != null && UpgradeManager.Instance.levelUpPanel != null)
         {
             if (UpgradeManager.Instance.levelUpPanel.activeSelf)
             {
                 UpgradeManager.Instance.levelUpPanel.SetActive(false);
-                Time.timeScale = 1f; // 恢复时间，避免卡死
             }
         }
-
-        Debug.Log($"🧹 战场大扫除完毕 (清除敌人: {enemies.Length}, 经验球: {gems.Length})");
     }
 
-    // =========================================================
-    // 按钮逻辑
-    // =========================================================
-    void BindFunctionButtons()
-    {
-        if (settingsButton != null)
-        {
-            settingsButton.onClick.RemoveAllListeners();
-            settingsButton.onClick.AddListener(() => {
-                if (GlobalCanvas.Instance != null) GlobalCanvas.Instance.ToggleSettings();
-            });
-        }
-
-        // 🔥 Home 按钮逻辑
-        if (homeButton != null)
-        {
-            homeButton.onClick.RemoveAllListeners();
-            homeButton.onClick.AddListener(() => {
-
-                _isLevelFinished = true; // 锁定状态
-                ClearBattlefield();      // 🔥 瞬间清空所有东西
-
-                if (IsEndlessMode)
-                {
-                    StartCoroutine(DelayedEndlessOverProcess());
-                }
-                else
-                {
-                    StartCoroutine(DelayedBackHomeProcess());
-                }
-            });
-        }
-
-        if (replayButton != null)
-        {
-            replayButton.onClick.RemoveAllListeners();
-            replayButton.onClick.AddListener(() => {
-                Time.timeScale = 1f;
-                ClearBattlefield(); // 重玩也要清
-                if (SceneController.Instance != null)
-                    SceneController.Instance.ReloadCurrentScene();
-                else
-                    SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-            });
-        }
-    }
-
-    IEnumerator DelayedBackHomeProcess()
-    {
-        // 安全的1秒留白
-        yield return new WaitForSecondsRealtime(1.0f);
-
-        Time.timeScale = 1f;
-        if (SceneController.Instance != null)
-            SceneController.Instance.LoadMainMenu();
-        else
-            SceneManager.LoadScene("MainMenuScene");
-    }
-
-    // =========================================================
-    // 游戏循环
-    // =========================================================
     void Update()
     {
         if (_isLevelFinished || isSpawningPaused) return;
+
         if (_playerTransform == null) return;
 
         _gameTime += Time.deltaTime;
@@ -221,13 +157,11 @@ public class EnemySpawner : MonoBehaviour
     void UpdateTimerUI()
     {
         if (timerText == null) return;
-
         if (IsEndlessMode)
         {
             int m = Mathf.FloorToInt(_gameTime / 60F);
             int s = Mathf.FloorToInt(_gameTime % 60F);
             timerText.text = $"∞ {m:00}:{s:00}";
-            timerText.transform.localScale = Vector3.one;
         }
         else
         {
@@ -235,107 +169,71 @@ public class EnemySpawner : MonoBehaviour
             int m = Mathf.FloorToInt(remaining / 60F);
             int s = Mathf.FloorToInt(remaining % 60F);
             timerText.text = $"{m:00}:{s:00}";
-
-            // 倒计时呼吸特效
-            if (remaining <= 5f)
-            {
-                timerText.color =new Color32(142,0,0,255);
-                float pulseSpeed = (remaining <= 5f) ? 1 : 0.5f;
-                float scale = 1.0f + Mathf.PingPong(Time.time * pulseSpeed, 0.2f);
-                timerText.transform.localScale = Vector3.one * scale;
-            }
-            else
-            {
-                timerText.color = Color.white;
-                timerText.transform.localScale = Vector3.one;
-            }
         }
     }
 
-    // =========================================================
-    // 胜利逻辑
-    // =========================================================
     void WinGame()
     {
         _isLevelFinished = true;
-        Debug.Log("🎉 时间到！清理战场...");
-
-        // 1. 瞬间清怪 + 清经验球
         ClearBattlefield();
-
-        // 2. 等待1秒再出结算
         StartCoroutine(DelayedWinProcess());
     }
 
     IEnumerator DelayedWinProcess()
     {
         yield return new WaitForSecondsRealtime(1.0f);
-
         if (SaveManager.Instance != null) SaveManager.Instance.CompleteLevel(currentLevelIndex);
-        if (victoryUI != null) victoryUI.ShowVictory(currentLevelIndex);
-    }
-    // =========================================================
-    // 🔥 修复：无尽模式结算逻辑 (新公式版)
-    // =========================================================
-    public void OnEndlessModeGameOver()
-    {
-        _isLevelFinished = true;
-
-        // 1. 清理战场
-        ClearBattlefield();
-
-        // 2. 启动结算流程
-        StartCoroutine(DelayedEndlessOverProcess());
+        if (victoryUI != null) victoryUI.ShowVictory(currentLevelIndex, killCount);
     }
 
-    System.Collections.IEnumerator DelayedEndlessOverProcess()
+    // 🔥🔥🔥 核心修复位置 🔥🔥🔥
+    IEnumerator DelayedEndlessOverProcess()
     {
-        // 稍等一秒，给玩家喘息时间
-        yield return new WaitForSecondsRealtime(1.0f);
-
-        // --- 📊 数据计算区域 ---
-
-        // 1. 获取基础数据
-        int killCount = currentScore; // 这里的 currentScore 实际上是击杀数 (AddScore(1) 加上去的)
-        int playTimeSeconds = Mathf.FloorToInt(_gameTime);
-
-        // 2. 🔥 应用新公式：分数 = 击杀数x100 + 时间(秒)x50
-        int finalScore = (killCount * 100) + (playTimeSeconds * 50);
-
-        Debug.Log($"💀 结算: 击杀{killCount} | 时间{playTimeSeconds}s | 总分{finalScore}");
-
-        // 3. 处理存档 (比对 FinalScore)
-        int bestScore = finalScore;
-        bool isNewRecord = false;
-
-        if (SaveManager.Instance != null)
-        {
-            // 尝试保存新的【总分】作为最高分
-            isNewRecord = SaveManager.Instance.TrySaveHighScore(finalScore);
-            bestScore = SaveManager.Instance.GetHighScore();
-        }
-
-        // 4. 发放金币 (可选：如果你想按分数发钱，比如 100分=1金币)
-        // int coins = Mathf.FloorToInt(finalScore / 100f);
-        // if (MoneyManager.Instance != null) MoneyManager.Instance.AddCoins(coins);
-
-        // --- 🖥️ UI 显示区域 ---
+        yield return new WaitForSecondsRealtime(0.5f);
 
         if (endScoreUI != null)
         {
-            // 参数顺序：总分, 最高分, 新纪录?, 用时, 降妖数
-            endScoreUI.Show(finalScore, bestScore, isNewRecord, _gameTime, killCount);
-        }
+            // 公式：(关卡数 * 50) + (击杀数 * 10) + (存活秒数 * 2)
+            // 这里用 (波数+1) 代替关卡数
+            int waveScore = (_currentWaveIndex + 1) * 50;
+            int killScore = killCount * 10;
+            int timeScore = Mathf.FloorToInt(_gameTime) * 2;
 
-        if (LeaderboardSystem.Instance != null)
-        {
-            LeaderboardSystem.Instance.RefreshLeaderboard();
+            int finalTotalScore = waveScore + killScore + timeScore;
+
+            Debug.Log($"无尽结算公式：(波数{_currentWaveIndex + 1} * 50) + ({killCount} * 10) + ({Mathf.FloorToInt(_gameTime)} * 2) = {finalTotalScore}");
+
+            int bestScore = 0;
+            if (SaveManager.Instance != null)
+            {
+                bestScore = SaveManager.Instance.GetHighScore();
+            }
+
+            bool isNewRecord = false;
+            // 如果破纪录了
+            if (finalTotalScore > bestScore)
+            {
+                isNewRecord = true;
+                bestScore = finalTotalScore;
+
+                // 1. 保存到本地
+                if (SaveManager.Instance != null)
+                {
+                    SaveManager.Instance.TrySaveHighScore(finalTotalScore);
+                }
+
+                // 2. 🔥 强制刷新排行榜数据！🔥
+                // 告诉 LeaderboardSystem：“存档变了，快重新读取一下！”
+                if (LeaderboardSystem.Instance != null)
+                {
+                    LeaderboardSystem.Instance.RefreshLeaderboard();
+                }
+            }
+
+            endScoreUI.Show(finalTotalScore, bestScore, isNewRecord, _gameTime, killCount);
         }
     }
 
-    // =========================================================
-    // 刷怪辅助 (保持不变)
-    // =========================================================
     void UpdateSpawning()
     {
         if (waves.Count == 0 || EnemyAI.ActiveCount >= maxEnemyCount) return;
@@ -352,11 +250,8 @@ public class EnemySpawner : MonoBehaviour
         if (wave.prefabs == null || wave.prefabs.Length == 0) return;
         Vector3 pos = GetBestSpawnPosition();
         GameObject prefab = wave.prefabs[Random.Range(0, wave.prefabs.Length)];
-
-        if (PoolManager.Instance != null)
-            PoolManager.Instance.Spawn(prefab, pos, Quaternion.identity);
-        else
-            Instantiate(prefab, pos, Quaternion.identity);
+        if (PoolManager.Instance != null) PoolManager.Instance.Spawn(prefab, pos, Quaternion.identity);
+        else Instantiate(prefab, pos, Quaternion.identity);
     }
 
     Vector3 GetBestSpawnPosition()
@@ -367,45 +262,54 @@ public class EnemySpawner : MonoBehaviour
         var sortedPoints = spawnPoints.OrderBy(p => Vector3.Distance(p.position, _playerTransform.position)).ToList();
         int startIndex = Mathf.FloorToInt(sortedPoints.Count * 0.5f);
         int randomIndex = Random.Range(startIndex, sortedPoints.Count);
+        return sortedPoints[randomIndex].position + new Vector3(Random.Range(-0.5f, 0.5f), 0, Random.Range(-0.5f, 0.5f));
+    }
 
-        Vector3 offset = new Vector3(Random.Range(-0.5f, 0.5f), 0, Random.Range(-0.5f, 0.5f));
-        return sortedPoints[randomIndex].position + offset;
+    void BindFunctionButtons()
+    {
+        if (settingsButton) settingsButton.onClick.AddListener(() => GlobalCanvas.Instance?.ToggleSettings());
+
+        if (homeButton) homeButton.onClick.AddListener(() => {
+
+            if (IsEndlessMode)
+            {
+                OnEndlessModeGameOver();
+            }
+            else
+            {
+                _isLevelFinished = true;
+                ClearBattlefield();
+                Time.timeScale = 1f;
+                if (SceneController.Instance) SceneController.Instance.LoadMainMenu();
+                else SceneManager.LoadScene("MainMenuScene");
+            }
+        });
+
+        if (replayButton) replayButton.onClick.AddListener(() => {
+            _isLevelFinished = true;
+            Time.timeScale = 1f;
+            ClearBattlefield();
+            if (SceneController.Instance) SceneController.Instance.ReloadCurrentScene();
+            else SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        });
     }
 
     void FindSpawnPointsAndSetupPlayer(string mapNodeName)
     {
         GameObject topRoot = GameObject.Find("EnemyCreatPoint");
-        if (topRoot == null)
+        if (topRoot == null) { GameObject pl = GameObject.FindGameObjectWithTag("Player"); if (pl) _playerTransform = pl.transform; return; }
+        Transform mapRoot = topRoot.transform.Find(mapNodeName) ?? (topRoot.transform.childCount > 0 ? topRoot.transform.GetChild(0) : null);
+        if (mapRoot == null) return;
+        Transform ep = mapRoot.Find("EnemyPoint");
+        if (ep) { spawnPoints = new Transform[ep.childCount]; for (int i = 0; i < ep.childCount; i++) spawnPoints[i] = ep.GetChild(i); }
+        Transform pp = mapRoot.Find("PlayerPoint");
+        if (pp && pp.childCount > 0 && playerManagerPrefab != null)
         {
-            GameObject existingPlayer = GameObject.FindGameObjectWithTag("Player");
-            if (existingPlayer) _playerTransform = existingPlayer.transform;
-            return;
-        }
-        Transform mapRoot = topRoot.transform.Find(mapNodeName);
-        if (mapRoot == null) { if (topRoot.transform.childCount > 0) mapRoot = topRoot.transform.GetChild(0); else return; }
-
-        Transform enemyContainer = mapRoot.Find("EnemyPoint");
-        if (enemyContainer != null)
-        {
-            spawnPoints = new Transform[enemyContainer.childCount];
-            for (int i = 0; i < enemyContainer.childCount; i++) spawnPoints[i] = enemyContainer.GetChild(i);
-        }
-
-        Transform playerContainer = mapRoot.Find("PlayerPoint");
-        if (playerContainer != null && playerContainer.childCount > 0)
-        {
-            Transform startPoint = playerContainer.GetChild(0);
-            GameObject oldManager = GameObject.Find("PlayerManager");
-            if (oldManager != null) Destroy(oldManager);
-
-            if (playerManagerPrefab != null)
-            {
-                GameObject newManager = Instantiate(playerManagerPrefab, startPoint.position, Quaternion.identity);
-                newManager.name = "PlayerManager";
-                Transform realPlayer = newManager.transform.Find("Player");
-                if (realPlayer != null) _playerTransform = realPlayer;
-                else foreach (Transform child in newManager.transform) if (child.CompareTag("Player")) { _playerTransform = child; break; }
-            }
+            GameObject old = GameObject.Find("PlayerManager"); if (old) Destroy(old);
+            GameObject nm = Instantiate(playerManagerPrefab, pp.GetChild(0).position, Quaternion.identity);
+            nm.name = "PlayerManager";
+            Transform real = nm.transform.Find("Player");
+            if (real) _playerTransform = real;
         }
     }
 }

@@ -5,7 +5,10 @@ public class GlobalCanvas : MonoBehaviour
     public static GlobalCanvas Instance;
 
     [Header("挂载界面")]
-    public GameObject settingsPanel; // 整个设置界面的父物体
+    public GameObject settingsPanel;
+
+    [Header("🔥 通用弹窗引用")]
+    public CommonTipPanel commonTipPanel; // 记得在Unity编辑器里把做好的卷轴弹窗拖到这里！
 
     void Awake()
     {
@@ -22,34 +25,40 @@ public class GlobalCanvas : MonoBehaviour
 
     void Start()
     {
-        // 游戏开始时确保关闭
-        if (settingsPanel != null)
-            settingsPanel.SetActive(false);
+        if (settingsPanel != null) settingsPanel.SetActive(false);
+        // 确保弹窗初始隐藏
+        if (commonTipPanel != null) commonTipPanel.gameObject.SetActive(false);
     }
 
-    // 提供给按钮调用 (切换开关)
     public void ToggleSettings()
     {
         if (settingsPanel != null)
         {
-            // 取反：当前是开就关，当前是关就开
             bool isOpening = !settingsPanel.activeSelf;
             settingsPanel.SetActive(isOpening);
-
-            // 🔥 核心逻辑：开界面就暂停(0)，关界面就恢复(1)
             Time.timeScale = isOpening ? 0f : 1f;
         }
     }
 
-    // 专门给“空白背景”用的关闭方法
     public void CloseSettings()
     {
         if (settingsPanel != null && settingsPanel.activeSelf)
         {
             settingsPanel.SetActive(false);
-
-            // 🔥 恢复游戏
             Time.timeScale = 1f;
+        }
+    }
+
+    // 🔥🔥🔥 核心：提供全局弹窗调用接口 🔥🔥🔥
+    public void ShowTip(string content, System.Action onConfirm = null, string btnStr = "确 定")
+    {
+        if (commonTipPanel != null)
+        {
+            commonTipPanel.ShowTip(content, onConfirm, btnStr);
+        }
+        else
+        {
+            Debug.LogError("GlobalCanvas: CommonTipPanel 未赋值，无法显示弹窗！");
         }
     }
 }

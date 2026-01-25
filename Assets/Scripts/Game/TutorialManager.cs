@@ -3,143 +3,136 @@ using UnityEngine.UI;
 using System.Collections;
 using TMPro;
 using DG.Tweening;
+using System;
 
 public class TutorialManager : MonoBehaviour
 {
     public static TutorialManager Instance;
 
-    [Header("UI 容器")]
-    public GameObject tutorialMask;
+    [Header("=== 第一阶段：黑屏开始 ===")]
+    public GameObject blackPanel;
+    public Button startBtn;
 
-    [Header("UI 子组件")]
+    [Header("=== 第二阶段：滑动引导 ===")]
+    public GameObject tutorialMask;
     public RectTransform focusArea;
     public RectTransform handIcon;
     public TextMeshProUGUI tipText;
 
-    [Header("摇杆控制")]
+    [Header("=== 摇杆引用 ===")]
     public Joystick playerJoystick;
     public RectTransform joystickTouchZone;
-
-    [Header("配置")]
     public Vector2 tutorialZoneSize = new Vector2(300, 300);
     public Vector2 tutorialZonePos = new Vector2(0, -400);
 
     private Vector2 _originalSize;
     private Vector2 _originalPos;
-
-    public SimpleWindowUI desImage;     //介绍UI
+    private Action _onCompleteCallback;
 
     void Awake()
     {
         Instance = this;
-        // 强制初始化关闭
-        if (tutorialMask != null) tutorialMask.SetActive(false);
+        if (blackPanel) blackPanel.SetActive(false);
+        if (tutorialMask) tutorialMask.SetActive(false);
+        if (handIcon) handIcon.gameObject.SetActive(false);
     }
 
-    void Start()
+    // 🔥🔥🔥 Start 留空！等待 LevelIntroUI 调用 🔥🔥🔥
+    void Start() { }
+
+    // 🔥 这个方法由 LevelIntroUI 动画结束后调用
+    public void CheckAndStartTutorial(Action onComplete)
     {
-        // 检查存档
-        if (PlayerPrefs.GetInt("IsTutorialFinished", 0) == 1)
+        _onCompleteCallback = onComplete;
+
+        bool isFinished = false;
+        if (SaveManager.Instance != null) isFinished = SaveManager.Instance.IsTutorialComplete();
+
+        if (isFinished)
         {
-            if (EnemySpawner.Instance) EnemySpawner.Instance.StartSpawning();
-            Destroy(gameObject); // 老玩家直接销毁脚本
-            return;
+            // === 老手 ===
+            Debug.Log("TutorialManager: 老手，跳过引导 -> 通知刷怪");
+            // 直接执行回调（去刷怪）
+            _onCompleteCallback?.Invoke();
+            Destroy(gameObject);
         }
-        desImage.Show();
-        
+        else
+        {
+            // === 新手 ===
+            Debug.Log("TutorialManager: 新手，开始黑屏流程");
+            StartBlackScreenPhase();
+        }
     }
 
-    public void StartSimpleTutorialFlow()
+    void StartBlackScreenPhase()
     {
-        desImage.Hide();
-
-        // 新手开始引导
-
-        StartCoroutine(SimpleTutorialFlow());
+        if (blackPanel) blackPanel.SetActive(true);
+        if (startBtn)
+        {
+            startBtn.onClick.RemoveAllListeners();
+            startBtn.onClick.AddListener(OnStartBtnClicked);
+        }
     }
 
-    IEnumerator SimpleTutorialFlow()
+    void OnStartBtnClicked()
     {
+        if (blackPanel) blackPanel.SetActive(false);
+        StartCoroutine(SlideTutorialFlow());
+    }
 
-        
+    IEnumerator SlideTutorialFlow()
+    {
+        if (joystickTouchZone != null)
+        {
+            _originalSize = joystickTouchZone.sizeDelta;
+            _originalPos = joystickTouchZone.anchoredPosition;
+            joystickTouchZone.sizeDelta = tutorialZoneSize;
+            joystickTouchZone.anchoredPosition = tutorialZonePos;
+        }
 
-        // --- 1. 准备 ---
-        _originalSize = joystickTouchZone.sizeDelta;
-        _originalPos = joystickTouchZone.anchoredPosition;
+        if (tutorialMask) tutorialMask.SetActive(true);
+        if (tipText) tipText.text = "滑动屏幕 移动角色";
 
-        joystickTouchZone.sizeDelta = tutorialZoneSize;
-        joystickTouchZone.anchoredPosition = tutorialZonePos;
-
-        tutorialMask.SetActive(true);
-        if (tipText) tipText.text = "滑动屏幕 控制角色";
-
-        // 动画
-        
         Sequence handSeq = DOTween.Sequence();
         if (handIcon)
         {
             handIcon.gameObject.SetActive(true);
             handIcon.anchoredPosition = tutorialZonePos;
-            focusArea.anchoredPosition = tutorialZonePos;
-
-            //handSeq.Append(handIcon.DOScale(0.8f, 0.5f));
-            //handSeq.Append(handIcon.DOScale(1.2f, 0.5f));
+            if (focusArea) focusArea.anchoredPosition = tutorialZonePos;
             handSeq.SetLoops(-1, LoopType.Yoyo);
+            handIcon.DOLocalMoveY(tutorialZonePos.y + 100, 1f).SetLoops(-1, LoopType.Yoyo);
         }
 
-        // --- 2. 检测 ---
         float moveTimer = 0f;
-        while (moveTimer < 0.5f)
+        while (moveTimer < 0.3f)
         {
-            if (new Vector2(playerJoystick.Horizontal, playerJoystick.Vertical).magnitude > 0.1f)
+            if (playerJoystick != null && new Vector2(playerJoystick.Horizontal, playerJoystick.Vertical).magnitude > 0.1f)
             {
                 moveTimer += Time.deltaTime;
-                if (handIcon && handIcon.gameObject.activeSelf) handIcon.gameObject.SetActive(false);
+                if (handIcon) handIcon.gameObject.SetActive(false);
             }
             else
             {
                 moveTimer = 0f;
-                if (handIcon && !handIcon.gameObject.activeSelf) handIcon.gameObject.SetActive(true);
+                if (handIcon) handIcon.gameObject.SetActive(true);
             }
             yield return null;
         }
 
-        // --- 3. 完成 ---
         handSeq.Kill();
-        joystickTouchZone.sizeDelta = _originalSize;
-        joystickTouchZone.anchoredPosition = _originalPos;
-        tutorialMask.SetActive(false);
+        if (joystickTouchZone != null)
+        {
+            joystickTouchZone.sizeDelta = _originalSize;
+            joystickTouchZone.anchoredPosition = _originalPos;
+        }
+        if (tutorialMask) tutorialMask.SetActive(false);
 
-        // 存档
-        PlayerPrefs.SetInt("IsTutorialFinished", 1);
-        PlayerPrefs.Save();
+        if (SaveManager.Instance != null) SaveManager.Instance.CompleteTutorial();
 
-        if (EnemySpawner.Instance) EnemySpawner.Instance.StartSpawning();
+        // 🔥 引导结束 -> 通知刷怪
+        Debug.Log("TutorialManager: 引导完成 -> 通知刷怪");
+        _onCompleteCallback?.Invoke();
 
         Destroy(gameObject);
     }
-
-    // =====================================================
-    // 🔥【新增】右键菜单重置 & F9 快捷键
-    // =====================================================
-
-    [ContextMenu("🔴 重置新手引导")]
-    public void ResetTutorial()
-    {
-        PlayerPrefs.DeleteKey("IsTutorialFinished");
-        PlayerPrefs.Save();
-        Debug.Log("【TutorialManager】新手引导已重置！请重新运行游戏。");
-    }
-
-#if UNITY_EDITOR
-    void Update()
-    {
-        // 开发时按 F9 键：重置数据 + 重启场景 = 立即重新测试引导
-        if (Input.GetKeyDown(KeyCode.F9))
-        {
-            ResetTutorial();
-            UnityEngine.SceneManagement.SceneManager.LoadScene(UnityEngine.SceneManagement.SceneManager.GetActiveScene().name);
-        }
-    }
-#endif
 }
